@@ -1,6 +1,6 @@
 import logging
 
-from pyx2cscope.lnetframe import LNetFrame
+from pylnet.pylnet.lnetframe import LNetFrame
 
 
 class FramePutRam(LNetFrame):

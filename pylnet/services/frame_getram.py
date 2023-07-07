@@ -1,4 +1,4 @@
-from pyx2cscope.lnetframe import LNetFrame
+from pylnet.pylnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):

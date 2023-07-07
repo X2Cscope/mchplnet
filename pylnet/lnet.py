@@ -1,15 +1,16 @@
 import serial
-from pylnet.interfaces.uart import LNetSerial
-from pylnet.services.frame_getram import FrameGetRam
-from pylnet.services.frame_putram import FramePutRam
-from pylnet.services.frame_device_info import FrameDeviceInfo
+from pylnet.pylnet.interfaces.uart import LNetSerial
+from pylnet.pylnet.services.frame_getram import FrameGetRam
+from pylnet.pylnet.services.frame_putram import FramePutRam
+from pylnet.pylnet.services.frame_device_info import FrameDeviceInfo
+from pylnet.pylnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNet(object):
     """Handle the LNet logic and services"""
 
-    def __init__(self, interface: serial.Serial, handshake: bool = True):
-        self.interface = LNetSerial(interface)  # TODO implement multiple interfaces
+    def __init__(self, interface: InterfaceABC, handshake: bool = True):
+        self.interface = interface
         self.width = None  # Initialize the width as None
         self.device_info = None
         if handshake:
@@ -58,20 +59,5 @@ class LNet(object):
 
     def _read_data(self, frame):
 
-        self.ser.write(frame)
-        response_list = []
-        counter = 0
-        i = 0
-        read_size = 4
-        while i < read_size:
-            byte = self.ser.read().hex()  # Get in hex
-            response_list.append(byte)
-            counter += 1
-            if counter == 3:
-                read_size = int(response_list[1], 16) + read_size
-            if i == 0:
-                pass
-            elif byte == '55' or byte == '02':
-                read_size += 1
-            i += 1
-        return response_list
+        self.interface.write(frame)
+        return self.interface.read()
