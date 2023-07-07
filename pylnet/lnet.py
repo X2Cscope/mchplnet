@@ -1,4 +1,5 @@
 import serial
+from pylnet.interfaces.uart import LNetSerial
 from pylnet.services.frame_getram import FrameGetRam
 from pylnet.services.frame_putram import FramePutRam
 from pylnet.services.frame_device_info import FrameDeviceInfo
@@ -8,7 +9,7 @@ class LNet(object):
     """Handle the LNet logic and services"""
 
     def __init__(self, interface: serial.Serial, handshake: bool = True):
-        self.ser = interface # TODO implement multiple interfaces
+        self.interface = LNetSerial(interface)  # TODO implement multiple interfaces
         self.width = None  # Initialize the width as None
         self.device_info = None
         if handshake:

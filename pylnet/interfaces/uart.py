@@ -2,6 +2,17 @@ import json
 import logging
 import serial
 
+from pylnet.interfaces.abstract_interface import InterfaceABC
+
+class LNetSerial(InterfaceABC):
+    
+    def write(self, data):
+        pass
+
+    def read(self):
+        pass
+
+
 def start_serial(
     port_name="COM11",
     baudrate=115200,
