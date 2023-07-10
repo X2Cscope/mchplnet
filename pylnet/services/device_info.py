@@ -1,9 +1,9 @@
-
-class DeviceInfo(object):
-    def __init__(self, monitorVer=0, appVer=0, processID=0, monitorDate=0, appDate=0, width=0):
-        self.monitorVer = monitorVer
-        self.appVer = appVer
-        self.processID = processID
-        self.monitorDate = monitorDate
-        self.appDate = appDate
-        self.width = width
+from dataclasses import dataclass
+@dataclass
+class DeviceInfo:
+    monitorVer: int = 0
+    appVer :int = 0
+    processID: int = 0
+    monitorDate: int = 0
+    appDate: int = 0
+    width:int = 0
