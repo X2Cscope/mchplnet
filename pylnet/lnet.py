@@ -1,9 +1,8 @@
-import serial
-from pylnet.pylnet.interfaces.uart import LNetSerial
-from pylnet.pylnet.services.frame_getram import FrameGetRam
-from pylnet.pylnet.services.frame_putram import FramePutRam
-from pylnet.pylnet.services.frame_device_info import FrameDeviceInfo
-from pylnet.pylnet.interfaces.abstract_interface import InterfaceABC
+from pylnet.services.frame_getram import FrameGetRam
+from pylnet.services.frame_putram import FramePutRam
+from pylnet.services.frame_device_info import FrameDeviceInfo
+from pylnet.interfaces.abstract_interface import InterfaceABC
+from pylnet.services.device_info import DeviceInfo
 
 
 class LNet(object):
@@ -11,18 +10,23 @@ class LNet(object):
 
     def __init__(self, interface: InterfaceABC, handshake: bool = True):
         self.interface = interface
-        self.width = None  # Initialize the width as None
         self.device_info = None
         if handshake:
-            self.handshake() # Perform handshake if requested
+            self.handshake()  # Perform handshake if requested
 
     def handshake(self):
-        if self.width is None:  # Check if width is already set
+        if self.device_info is None:  # Check if width is already set
             device_info = FrameDeviceInfo()
             response = self._read_data(device_info.serialize())
-            response = device_info.deserialize(response)
-            self.width = response # TODO device_info.width
-        return self.width
+            self.device_info= device_info.deserialize(response)
+        return DeviceInfo(monitorVer=self.device_info.monitorVer,
+                          appVer=self.device_info.appVer,
+                          processorID=self.device_info.processorID,
+                          width=self.device_info.width,
+                          dsp_state=self.device_info.dsp_state,
+                          monitorDate=self.device_info.monitorDate,
+                          appDate= self.device_info.appDate,
+                          )
 
     def get_ram(self, address: int, size: int) -> bytearray:
         """
@@ -32,9 +36,9 @@ class LNet(object):
 
         Returns: bytearray - The bytes read from the microcontroller RAM
         """
-        if self.width is None:
+        if self.device_info is None:
             raise RuntimeError("Device width is not set. Call device_info() first.")
-        get_ram_frame = FrameGetRam(address, size, self.width)  # Pass self.width as an argument
+        get_ram_frame = FrameGetRam(address, size, self.device_info.width)  # Pass self.device_infoas an argument
         # self.ser.write(get_ram_frame.serialize())
 
         response = self._read_data(get_ram_frame.serialize())
@@ -48,9 +52,9 @@ class LNet(object):
         size: int - The number of bytes to write to the microcontroller RAM
         value: bytes - The bytes to write to the microcontroller RAM
         """
-        if self.width is None:
+        if self.device_info is None:
             raise RuntimeError("Device width is not set. Call device_info() first.")
-        put_ram_frame = FramePutRam(address, size, self.width, value)  # Pass self.width as an argument
+        put_ram_frame = FramePutRam(address, size, self.width, value)  # Pass self.device_infoas an argument
         # self.ser.write(put_ram_frame.serialize())
 
         response = self._read_data(put_ram_frame.serialize())

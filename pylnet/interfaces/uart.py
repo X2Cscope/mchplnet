@@ -1,5 +1,5 @@
 import serial
-from pylnet.pylnet.interfaces.abstract_interface import InterfaceABC
+from pylnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetSerial(InterfaceABC):
@@ -11,6 +11,7 @@ class LNetSerial(InterfaceABC):
         self.stop_bit = kwargs["stop_bit"] if "stop_bit" in kwargs else 1
         self.data_bits = kwargs["data_bits"] if "data_bits" in kwargs else 8
         self.serial = None
+        self.start()
 
     def start(self):
         """
@@ -73,6 +74,8 @@ class LNetSerial(InterfaceABC):
 
     def write(self, data):
         self.serial.write(data)
+    def is_open(self):
+        return self.serial.is_open
     def read(self):
         response_list = []
         counter = 0
@@ -89,4 +92,7 @@ class LNetSerial(InterfaceABC):
             elif byte == '55' or byte == '02':
                 read_size += 1
             i += 1
-        return response_list
+        if response_list:
+            return response_list
+        else:
+            return None

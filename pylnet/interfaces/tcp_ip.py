@@ -1,7 +1,10 @@
-from pylnet.pylnet.interfaces.abstract_interface import InterfaceABC
+from pylnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetTcpIp(InterfaceABC):
+
+    def is_open(self):
+        pass
 
     def start(self):
         pass

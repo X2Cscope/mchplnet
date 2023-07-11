@@ -1,4 +1,4 @@
-from pylnet.pylnet.lnetframe import LNetFrame
+from pylnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):

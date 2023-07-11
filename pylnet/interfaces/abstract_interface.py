@@ -26,3 +26,8 @@ class InterfaceABC(ABC):
     @abstractmethod
     def stop(self):
         pass
+
+    @abstractmethod
+    def is_open(self):
+        pass
+
