@@ -2,7 +2,6 @@ from pylnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):
-
     def __init__(self, address: int, size: int, width: int):
         """
         Responsible for setting up the request frame for MCU to 'Get' the variable value.
@@ -15,6 +14,7 @@ class FrameGetRam(LNetFrame):
         self.address = address
         self.size = size
         self.width = width
+
     def _get_data(self) -> list:
         """
         Provides the value of the variable defined by the user.
@@ -45,13 +45,15 @@ class FrameGetRam(LNetFrame):
             raise ValueError("Received data size is invalid.")
 
         # Extract the data bytes
-        data_received = received[5:5 + size_received_data - 2]
+        data_received = received[5 : 5 + size_received_data - 2]
 
         # Convert the data bytes to a bytearray
         b_array = bytearray()
         for char in data_received:
             try:
-                i = int.from_bytes(bytes.fromhex(char), byteorder="little", signed=False)
+                i = int.from_bytes(
+                    bytes.fromhex(char), byteorder="little", signed=False
+                )
                 b_array.append(i)
             except ValueError:
                 raise ValueError("Failed to convert data bytes.")

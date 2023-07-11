@@ -1,9 +1,9 @@
-import serial
 from abc import ABC, abstractmethod
+
+import serial
 
 
 class InterfaceABC(ABC):
-
     @abstractmethod
     def __init__(self, *args, **kwargs):
         pass
@@ -30,4 +30,3 @@ class InterfaceABC(ABC):
     @abstractmethod
     def is_open(self):
         pass
-

@@ -1,6 +1,8 @@
-from pylnet.interfaces.factory import InterfaceFactory, InterfaceType as IType
+from pylnet.interfaces.factory import InterfaceFactory
+from pylnet.interfaces.factory import InterfaceType as IType
 from pylnet.lnet import LNet
-interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM8", baudrate= 115200)
+
+interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM8", baudrate=115200)
 l_net = LNet(interface)
 value = l_net.handshake()
 print(value.monitorDate)

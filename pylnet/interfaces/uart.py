@@ -1,10 +1,10 @@
 import serial
+
 from pylnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetSerial(InterfaceABC):
-
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.com_port = kwargs["port"] if "port" in kwargs else "COM11"
         self.baud_rate = kwargs["baud_rate"] if "baud_rate" in kwargs else 115200
         self.parity = kwargs["parity"] if "parity" in kwargs else 0
@@ -74,8 +74,10 @@ class LNetSerial(InterfaceABC):
 
     def write(self, data):
         self.serial.write(data)
+
     def is_open(self):
         return self.serial.is_open
+
     def read(self):
         response_list = []
         counter = 0
@@ -89,7 +91,7 @@ class LNetSerial(InterfaceABC):
                 read_size = int(response_list[1], 16) + read_size
             if i == 0:
                 pass
-            elif byte == '55' or byte == '02':
+            elif byte == "55" or byte == "02":
                 read_size += 1
             i += 1
         if response_list:

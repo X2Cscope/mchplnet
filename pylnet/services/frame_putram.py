@@ -77,9 +77,10 @@ class FramePutRam(LNetFrame):
         return self.value_user
 
     def _deserialize(self, received: bytearray) -> bytearray:
-        data_received = int(self.received[-2],16)
-        if not data_received == 0: #TODO : check if this is the correct way to return if it is not 0?
+        data_received = int(self.received[-2], 16)
+        if (
+            not data_received == 0
+        ):  # TODO : check if this is the correct way to return if it is not 0?
             return
         logging.info("Error_id : {}".format(self.error_id(data_received)))
         return self.error_id(data_received)
-

@@ -104,9 +104,7 @@ class LNetFrame(object):
         self.crc = crc_calculation  # adding the hex checksum to the list of the data
 
         logging.debug(
-            "Calculated CRC for the frame: {}  Based on: {}".format(
-                self.crc, list_crc
-            )
+            "Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc)
         )
 
         return self.crc
@@ -280,4 +278,4 @@ class SaveParameter(LNetFrame):
 
 
 if __name__ == "__main__":
-    print('Elf_parser.__name__')
+    print("Elf_parser.__name__")
