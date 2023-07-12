@@ -1,8 +1,8 @@
-from pylnet.interfaces.abstract_interface import InterfaceABC
-from pylnet.services.device_info import DeviceInfo
-from pylnet.services.frame_device_info import FrameDeviceInfo
-from pylnet.services.frame_getram import FrameGetRam
-from pylnet.services.frame_putram import FramePutRam
+from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.services.device_info import DeviceInfo
+from mchplnet.services.frame_device_info import FrameDeviceInfo
+from mchplnet.services.frame_getram import FrameGetRam
+from mchplnet.services.frame_putram import FramePutRam
 
 
 class LNet(object):

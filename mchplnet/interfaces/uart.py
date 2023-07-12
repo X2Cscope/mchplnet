@@ -1,6 +1,6 @@
 import serial
 
-from pylnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetSerial(InterfaceABC):

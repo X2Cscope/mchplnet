@@ -8,9 +8,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 
-name = "pylnet"
+name = "mchplnet"
 
-version = "0.0.1"
+version = "0.0.2"
 
 description = "python implementation of X2Cscope"
 
@@ -24,7 +24,7 @@ authors = ["Yash Agarwal <yash.agarwal@microchip.com>",
 
 readme = "README.md"
 
-packages = [{include = "pylnet"}]
+packages = [{include = "mchplnet"}]
 
 license = "Proprietary"
 
@@ -33,7 +33,7 @@ homepage = "https://x2cscope.github.io/"
 
 documentation = "https://x2cscope.github.io/"
 
-repository = "https://github.com/X2Cscope/pylnet"
+repository = "https://github.com/X2Cscope/mchplnet"
 
 
 [tool.poetry.dependencies]
@@ -44,3 +44,4 @@ pyserial = "^3.5"
 [tool.setuptools.packages.find]
 
 exclude = ["test", "doc", "examples"]  # empty by default
+

@@ -1,5 +1,5 @@
-from pylnet.lnetframe import LNetFrame
-from pylnet.services.device_info import DeviceInfo
+from mchplnet.lnetframe import LNetFrame
+from mchplnet.services.device_info import DeviceInfo
 
 
 class FrameDeviceInfo(LNetFrame):

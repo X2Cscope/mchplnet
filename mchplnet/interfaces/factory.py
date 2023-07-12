@@ -1,10 +1,10 @@
 from enum import Enum
 
-from pylnet.interfaces.abstract_interface import InterfaceABC
-from pylnet.interfaces.can import LNetCan
-from pylnet.interfaces.lin import LNetLin
-from pylnet.interfaces.tcp_ip import LNetTcpIp
-from pylnet.interfaces.uart import LNetSerial
+from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.can import LNetCan
+from mchplnet.interfaces.lin import LNetLin
+from mchplnet.interfaces.tcp_ip import LNetTcpIp
+from mchplnet.interfaces.uart import LNetSerial
 
 
 class InterfaceType(Enum):

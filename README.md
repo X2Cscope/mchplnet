@@ -2,18 +2,18 @@
   <img src="pyx2cscope/docs/img/microchip-technology-logo.png" alt="PyX2CScope Logo" width="250">
 </p>
 
-# pylnet
-- pylnet is the Python implementation of the LNet protocol.
-- It implements multiple LNet services to commincate to embedded systems/microcontrollers.
+# mchplnet
+- mchplnet is the Python implementation of the LNet protocol.
+- It implements multiple LNet services to communicate to embedded systems/microcontrollers.
 - Currently only pyserial interface is supported 
-- Recommended to use pyx2cscope package instead of this low level implementation
+- Recommended to use pyx2cscope package instead of this low-level implementation
 
 ## Getting Started
 
 ```
-import pylnet
+import mchplnet
 import serial
-l_net = pylnet.LNet(serial.Serial('COM8', 115200))
+l_net = mchplnet.LNet(serial.Serial('COM8', 115200))
 var_address = 0x00000000
 var_size = 4 
 var_value = l_net.get_ram(var_address, var_size) 
