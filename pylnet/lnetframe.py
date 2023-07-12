@@ -67,7 +67,6 @@ class LNetFrame(object):
         Returns:
             bytearray: Serialized frame
         """
-        # TODO putting the handshake here
         self.data = self._get_data()  # get data from the subclass (actual service)
         frame_size = len(self.data)  # get the length of the data frame
 

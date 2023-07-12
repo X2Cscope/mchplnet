@@ -31,8 +31,6 @@ class FrameGetRam(LNetFrame):
         @param received: Data received from MCU
         @return: Deserialized bytearray
         """
-        self.received = received
-
         # Check if received data is empty
         if len(received) < 2:
             raise ValueError("Received data is incomplete.")

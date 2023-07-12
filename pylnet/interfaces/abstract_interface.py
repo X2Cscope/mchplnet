@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-import serial
-
 
 class InterfaceABC(ABC):
     @abstractmethod

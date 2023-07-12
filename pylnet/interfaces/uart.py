@@ -15,16 +15,16 @@ class LNetSerial(InterfaceABC):
 
     def start(self):
         """
-        Set up the serial communication with the provided settings.
+        set up the serial communication with the provided settings.
 
         Args:
             self.com_port (str): Serial port name.
-            baudrate (int): Baud rate of the system (bits/sec).
-            parity (int): Parity setting.
-            stop_bits (int): Number of stop bits.
-            data_bits (int): Number of data bits.
+            self.baud-rate (int): Baud rate of the system (bits/sec).
+            self.parity (int): Parity setting.
+            self.stop_bits (int): Number of stop bits.
+            self.data_bits (int): Number of data bits.
 
-        Returns:
+        returns:
             serial.Serial: Initialized serial object for communication.
 
         Raises:

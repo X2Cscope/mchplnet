@@ -12,9 +12,9 @@ class LNet(object):
         self.interface = interface
         self.device_info = None
         if handshake:
-            self.handshake()  # Perform handshake if requested
+            self.interface_handshake()  # Perform interface_handshake if requested
 
-    def handshake(self):
+    def interface_handshake(self):
         if self.device_info is None:  # Check if width is already set
             device_info = FrameDeviceInfo()
             response = self._read_data(device_info.serialize())
@@ -31,17 +31,17 @@ class LNet(object):
 
     def get_ram(self, address: int, size: int) -> bytearray:
         """
-        Handles the Get RAM service-id.
+        handles Get RAM service-id.
         address: int - The address to read from the microcontroller RAM
         size: int - The number of bytes to read from the microcontroller RAM
 
-        Returns: bytearray - The bytes read from the microcontroller RAM
+        returns: bytearray - The bytes read from the microcontroller RAM
         """
         if self.device_info is None:
             raise RuntimeError("Device width is not set. Call device_info() first.")
         get_ram_frame = FrameGetRam(
             address, size, self.device_info.width
-        )  # Pass self.device_infoas an argument
+        )  # Pass self.device_info as an argument
         # self.ser.write(get_ram_frame.serialize())
 
         response = self._read_data(get_ram_frame.serialize())
@@ -50,7 +50,7 @@ class LNet(object):
 
     def put_ram(self, address: int, size: int, value: bytes):
         """
-        Handles the Put RAM service-id.
+        handles the Put RAM service-id.
         address: int - The address to write to the microcontroller RAM
         size: int - The number of bytes to write to the microcontroller RAM
         value: bytes - The bytes to write to the microcontroller RAM
@@ -58,8 +58,8 @@ class LNet(object):
         if self.device_info is None:
             raise RuntimeError("Device width is not set. Call device_info() first.")
         put_ram_frame = FramePutRam(
-            address, size, self.width, value
-        )  # Pass self.device_infoas an argument
+            address, size, self.device_info.width, value
+        )  # Pass self.device_info as an argument
         # self.ser.write(put_ram_frame.serialize())
 
         response = self._read_data(put_ram_frame.serialize())

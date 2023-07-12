@@ -8,9 +8,9 @@ class FramePutRam(LNetFrame):
         """
         responsible for setting up the request frame for MCU to 'Set' the variable value.
 
-        @param address: address of the variable
-        @param size: size of the variable
-        @param value: value to set on the defined variable in bytes
+        @param address: address of the variable.
+        @param size: size of the variable.
+        @param value: value to set on the defined variable in byte's
         @param width: width according to the type of microcontroller
         """
         super().__init__()
@@ -77,10 +77,8 @@ class FramePutRam(LNetFrame):
         return self.value_user
 
     def _deserialize(self, received: bytearray) -> bytearray:
-        data_received = int(self.received[-2], 16)
-        if (
-            not data_received == 0
-        ):  # TODO : check if this is the correct way to return if it is not 0?
+        data_received = int(received[-2], 16)
+        if not data_received == 0:
             return
         logging.info("Error_id : {}".format(self.error_id(data_received)))
         return self.error_id(data_received)

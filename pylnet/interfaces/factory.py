@@ -24,7 +24,7 @@ class InterfaceFactory:
                 LNetSerial,
                 {
                     "port": "Serial port name or device path",
-                    "baudrate": "Baudrate for the serial communication",
+                    "baudrate": "Baud-rate for the serial communication",
                 },
             ),
             InterfaceType.CAN: (
@@ -61,11 +61,11 @@ class InterfaceFactory:
 
 
 if __name__ == "__main__":
-    interface_type = InterfaceType.SERIAL
-    interface_kwargs = {"port": "COM8", "baudrate": 115200}
+    interface = InterfaceType.SERIAL
+    interface_kwargs = {"port": "COM8", "baud-rate": 115200}
 
     try:
-        interface = InterfaceFactory.get_interface(interface_type, **interface_kwargs)
+        interface = InterfaceFactory.get_interface(interface, **interface_kwargs)
         print("Interface created:", interface)
     except ValueError as e:
         print("Error creating interface:", str(e))

@@ -10,17 +10,17 @@
 
 ## Getting Started
 
-'''
+```
 import pylnet
 import serial
-
 l_net = pylnet.LNet(serial.Serial('COM8', 115200))
-print(l_net.device_info.appVer)
-#### 0x00000000 is the address of the variable in RAM and 4 is the number of bytes to read
-ret_bytes = l_net.get_ram(0x00000000, 4) 
-print(ret_bytes)
-
-'''
+var_address = 0x00000000
+var_size = 4 
+var_value = l_net.get_ram(var_address, var_size) 
+print(var_value)
+var_newValue = 500
+l_net.put_ram(var_address, var_size, var_newValue)
+```
 
 ## Contribute
 If you discover a bug or have an idea for an improvement, we encourage you to contribute! You can do so by following these steps:
