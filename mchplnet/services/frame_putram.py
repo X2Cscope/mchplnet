@@ -3,6 +3,7 @@ import logging
 from mchplnet.lnetframe import LNetFrame
 
 
+# noinspection PyTypeChecker
 class FramePutRam(LNetFrame):
     def __init__(self, address: int, size: int, width: int, value: bytearray = []):
         """
@@ -18,7 +19,7 @@ class FramePutRam(LNetFrame):
         self.service_id = 10
         self.address = address
         self.size = size
-        self.value_user = value
+        self.user_value = value
 
     def _get_data(self) -> list:
         """
@@ -27,7 +28,7 @@ class FramePutRam(LNetFrame):
         """
         byte_address = self.address.to_bytes(length=self.width, byteorder="little")
         add_setup = [*byte_address]
-        return [self.service_id, *add_setup, self.size, *self.value_user]
+        return [self.service_id, *add_setup, self.size, *self.user_value]
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
@@ -38,9 +39,9 @@ class FramePutRam(LNetFrame):
         """
         self.address = address
         self.size = size
-        self.value_user = value
+        self.user_value = value
 
-    def set_size(self, size: int) -> object:
+    def set_size(self, size: int):
         """
         setting size of Variable for the LNET frame for getRamBlock
         @rtype: object
@@ -68,13 +69,13 @@ class FramePutRam(LNetFrame):
 
         @param value: user defined value for the specific variable
         """
-        self.value_user = value
+        self.user_value = value
 
     def get_user_value(self):
         """
         @return: self.user_value
         """
-        return self.value_user
+        return self.user_value
 
     def _deserialize(self, received: bytearray) -> bytearray:
         data_received = int(received[-2], 16)

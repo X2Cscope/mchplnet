@@ -1,7 +1,16 @@
+"""
+FrameGetRam
+
+FrameGetRam enables the function call load parameter of LNet protocol.
+"""
 from mchplnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):
+    """
+    Class implementation: load Parameter function of LNet protocol
+    """
+
     def __init__(self, address: int, size: int, width: int):
         """
         Responsible for setting up the request frame for MCU to 'Get' the variable value.

@@ -1,7 +1,8 @@
-from mchplnet.lnetframe import LNetFrame
+import logging
 from dataclasses import dataclass
 from typing import List
-import logging
+
+from mchplnet.lnetframe import LNetFrame
 
 
 @dataclass
@@ -37,7 +38,8 @@ class FrameSaveParameter(LNetFrame):
         self.address = None
         self.size = None
         self.service_id = 18
-        self.unique_ID = 1
+        self.unique_ID = 65535
+        self.unique_ID = self.unique_ID.to_bytes(length=2, byteorder="little")
         self.scope_config = None
 
     def _deserialize(self, received: bytearray) -> bytearray:
@@ -54,7 +56,7 @@ class FrameSaveParameter(LNetFrame):
         Returns:
             list: DATA part of the frame
         """
-        save_params = [self.service_id, self.unique_ID]
+        save_params = [self.service_id, *self.unique_ID]
 
         if self.scope_config:
             scope_config = self.scope_config
@@ -91,17 +93,6 @@ class FrameSaveParameter(LNetFrame):
 
         return save_params
 
-    def add_channel(self, name, source_type, source_location, data_type_size):
-        if not self.scope_config:
-            raise ValueError("ScopeConfiguration is not set. Use set_scope_configuration() to set it.")
-        channel = ScopeChannel(name=name, source_type=source_type, source_location=source_location,
-                               data_type_size=data_type_size)
-        self.scope_config.channels.append(channel)
-
-    def remove_channel_by_name(self, name):
-        if self.scope_config:
-            self.scope_config.channels = [channel for channel in self.scope_config.channels if channel.name != name]
-
     def set_scope_configuration(self, scope_config):
         self.scope_config = scope_config
 
@@ -110,17 +101,38 @@ if __name__ == "__main__":
     frame = FrameSaveParameter()
 
     # Set up scope configuration
-    scope_config = ScopeConfiguration(scope_state=0x01, sample_time_factor=10, channels=[])
+    scope_config = ScopeConfiguration(
+        scope_state=0x01, sample_time_factor=10, channels=[]
+    )
 
     # Add channels to the scope configuration
     scope_config.channels.append(
-        ScopeChannel(name='Channel 1', source_type=0x00, source_location=0xDEADCAFE, data_type_size=4))
+        ScopeChannel(
+            name="Channel 1",
+            source_type=0x00,
+            source_location=0xDEADCAFE,
+            data_type_size=4,
+        )
+    )
     scope_config.channels.append(
-        ScopeChannel(name='Channel 2', source_type=0x00, source_location=0x8899AABB, data_type_size=2))
+        ScopeChannel(
+            name="Channel 2",
+            source_type=0x00,
+            source_location=0x8899AABB,
+            data_type_size=2,
+        )
+    )
 
     # Set up trigger configuration
-    scope_config.trigger = ScopeTrigger(data_type=4, source_type=0x00, source_location=0x12345678,
-                                        trigger_level=70000, trigger_delay=600, trigger_edge=0x00, trigger_mode=0x01)
+    scope_config.trigger = ScopeTrigger(
+        data_type=4,
+        source_type=0x00,
+        source_location=0x12345678,
+        trigger_level=70000,
+        trigger_delay=600,
+        trigger_edge=0x00,
+        trigger_mode=0x01,
+    )
 
     # Set the scope configuration in the frame
     frame.set_scope_configuration(scope_config)
@@ -128,7 +140,7 @@ if __name__ == "__main__":
     print(frame._get_data())
 
     # Remove a channel by name
-    frame.remove_channel_by_name('Channel 2')
+    frame.remove_channel_by_name("Channel 2")
 
     # Convert to bytes again after removing a channel
     print(frame._get_data())
