@@ -1,7 +1,36 @@
+"""
+File: frame_device_info.py
+Description: This module defines a custom frame for device information retrieval and interpretation.
+
+This frame is responsible for Hand-Shake, Monitor-Version, Identifying processor Type, and Application Version.
+It extracts various parameters related to the device, such as monitor version, application version, processor ID,
+monitor date, DSP state, microcontroller width, etc.
+
+Usage:
+    - Ensure that the necessary imports from external modules are satisfied.
+    - The class `FrameDeviceInfo` inherits from `LNetFrame`, which is not provided in this module.
+      Make sure to import the required module or define the `LNetFrame` class to use this module properly.
+    - Utilize the `FrameDeviceInfo` class to deserialize received data and retrieve device information.
+
+"""
+
+from dataclasses import dataclass
+
 from mchplnet.lnetframe import LNetFrame
-from mchplnet.services.device_info import DeviceInfo
 
 
+@dataclass
+class DeviceInfo:
+    monitorVer: int = 0
+    appVer: int = 0
+    processorID: int = 0
+    monitorDate: int = 0
+    appDate: int = 0
+    uc_width: int = 0
+    dsp_state: int = 0
+
+
+# noinspection PyTypeChecker
 class FrameDeviceInfo(LNetFrame):
     def __init__(self):
         """
@@ -119,7 +148,7 @@ class FrameDeviceInfo(LNetFrame):
 
         DeviceInfo.appVer = self._app_ver(app_ver_id)
         DeviceInfo.monitorVer = self._monitor_ver(monitor_id)
-        DeviceInfo.width = (
+        DeviceInfo.uc_width = (
             self._uc_id()
         )  # Returning the width for the address setup in get ram and put ram
         DeviceInfo.monitorDate = self._monitor_date()

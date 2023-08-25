@@ -1,50 +1,54 @@
 import logging
 
 logger = logging.getLogger(__name__)
+from abc import ABC, abstractmethod
 
 
-class LNetFrame(object):
+# noinspection PyTypeChecker
+class LNetFrame(ABC):
     """
     Implements frame structure
 
-    SYN     SIZE    NODE    DATA    CRC
+    SYN SIZE NODE DATA CRC
     SYN
     Size: 1 byte
     Indicates the start of a frame. This byte is always 0x55.
     The value 0x02 is also reserved for future purposes. These 2 reserved values must be
     specially treated if they occur in any other frame area than in SYN. (see 3.6)
 
-    SIZE
-    Size: 1 byte
+    SIZE: 1 byte
     The number of data bytes.
     Optional fill-bytes (see 3.6) will not be added to SIZE.
 
     Slave NODE ID
     Size: 1 byte
     Identifies the slave to which the master wants to send the frame.
-    The master sets this byte to the slave ID it wants to communicate with and the slave sets
+    The master sets this byte to the slave ID it wants to communicate with, and the slave sets
     this byte to its own ID when responding to the master.
 
     DATA - Implemented by subclasses
     Size: up to 255 bytes
-    Contains the data. The data area is also divided into several parts. Master and slave use
+    Contain the data. The data area is also divided into several parts. Master and slave use
     different data structures.
 
         Master data structure (request frame)
-        Data    byteNameDescription
-        0       Service IDIdentifies which service will be used
-        1 ...   nService data(optional) service data
+        Data byteNameDescription
+        0 Service IDIdentifies which service will be used
+        1 ... nService data(optional) service data
     """
 
     def __init__(self):
         """
         LNet request and response frame setup dependent on the ServiceId and Size of the variable
         """
+        self.received = None
+        self.service_id = None
         self.__syn = 85
         self.__node = 1
         self.data = []  # data
         self.crc = None
 
+    @abstractmethod
     def _get_data(self):
         """
         Define interface, job of subclass to implement based on the service type
@@ -108,7 +112,8 @@ class LNetFrame(object):
 
         return self.crc
 
-    def _fill_bytes(self, frame):
+    @staticmethod
+    def _fill_bytes(frame):
         """
         LNet has 2 reserved key values: 0x55 and 0x02.
         To avoid misinterpretation within SIZE, NODE, DATA or CRC area, these values must be
@@ -120,11 +125,11 @@ class LNetFrame(object):
             list: Frame with fill bytes added
         """
         i = 1
-        looplength = len(frame)
-        while i < looplength:
+        loop_length = len(frame)
+        while i < loop_length:
             if frame[i] == 2 or frame[i] == 85:
                 frame.insert(i + 1, 0)
-                looplength += 1
+                loop_length += 1
             i += 1
         logger.debug("_fill_bytes assembled frame: {}".format(frame))
         return frame
@@ -155,6 +160,7 @@ class LNetFrame(object):
             return False
         return True
 
+    @abstractmethod
     def _deserialize(self, received):
         pass
 
@@ -194,7 +200,8 @@ class LNetFrame(object):
         if self.frame_integrity() and self._check_id():
             return self._deserialize(self.received)
 
-    def error_id(self, error_id):
+    @staticmethod
+    def error_id(error_id):
         _error_id = {
             0: "No Error",
             19: "Checksum Error",
@@ -217,63 +224,6 @@ class LNetFrame(object):
             logging.error("Valid index numbers are: " + _error_id.keys())
             return
         return _error_id[error_id]
-
-
-###################################  Placeholder classes ########################################
-class LoadParameter(LNetFrame):
-    def __init__(self):
-        self.service_id = 17
-        self.unique_parameter = 0
-        super().__init__()
-
-    def set_size(self, size):
-        self.size = size
-
-    def get_size(self):
-        return self.size
-
-    def set_address(self, address):
-        self.address = address
-
-    def get_address(self):
-        return self.address
-
-    def _get_data(self):
-        """
-        Define interface, job of subclass to implement based on the service type
-
-        Returns:
-            list: DATA part of the frame
-        """
-        return [self.service_id, self.unique_parameter]
-
-
-class SaveParameter(LNetFrame):
-    def __init__(self):
-        self.service_id = 17
-        self.unique_parameter = 0
-        super().__init__()
-
-    def set_size(self, size):
-        self.size = size
-
-    def get_size(self):
-        return self.size
-
-    def set_address(self, address):
-        self.address = address
-
-    def get_address(self):
-        return self.address
-
-    def _get_data(self):
-        """
-        Define interface, job of subclass to implement based on the service type
-
-        Returns:
-            list: DATA part of the frame
-        """
-        return [self.service_id, self.unique_parameter]
 
 
 if __name__ == "__main__":

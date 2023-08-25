@@ -1,5 +1,4 @@
 import serial
-
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 
 
