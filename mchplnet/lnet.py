@@ -1,3 +1,5 @@
+import logging
+
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
@@ -39,7 +41,7 @@ class LNet(object):
                 appDate=self.device_info.appDate,
             )
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def save_paramater(self, scope_config: ScopeConfiguration):
         if self.device_info is None:
@@ -47,7 +49,7 @@ class LNet(object):
         frame_save_param = FrameSaveParameter()
         frame_save_param.set_scope_configuration(scope_config)
         response = self._read_data(frame_save_param.serialize())
-        print(response)
+        logging.debug(response)
         response = frame_save_param.deserialize(response)
 
         return response

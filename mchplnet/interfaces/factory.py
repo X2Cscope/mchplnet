@@ -5,7 +5,7 @@ from mchplnet.interfaces.can import LNetCan
 from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
-
+import logging
 
 class InterfaceType(Enum):
     SERIAL = 1
@@ -66,6 +66,6 @@ if __name__ == "__main__":
 
     try:
         interface = InterfaceFactory.get_interface(interface, **interface_kwargs)
-        print("Interface created:", interface)
+        logging.debug("Interface created:", interface)
     except ValueError as e:
-        print("Error creating interface:", str(e))
+        logging.debug("Error creating interface:", str(e))

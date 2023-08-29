@@ -227,4 +227,4 @@ class LNetFrame(ABC):
 
 
 if __name__ == "__main__":
-    print("Elf_parser.__name__")
+    logging.debug("Elf_parser.__name__")

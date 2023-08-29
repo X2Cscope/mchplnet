@@ -1,3 +1,5 @@
+import logging
+
 import serial
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 
@@ -66,7 +68,7 @@ class LNetSerial(InterfaceABC):
                 timeout=1,
             )
         except Exception as e:
-            print(e)
+            logging.debug(e)
 
     def stop(self):
         self.serial.close()

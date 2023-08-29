@@ -137,10 +137,10 @@ if __name__ == "__main__":
     # Set the scope configuration in the frame
     frame.set_scope_configuration(scope_config)
 
-    print(frame._get_data())
+    logging.debug(frame._get_data())
 
     # Remove a channel by name
     frame.remove_channel_by_name("Channel 2")
 
     # Convert to bytes again after removing a channel
-    print(frame._get_data())
+    logging.debug(frame._get_data())
