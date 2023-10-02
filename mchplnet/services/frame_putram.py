@@ -3,18 +3,24 @@ import logging
 from mchplnet.lnetframe import LNetFrame
 
 
-# noinspection PyTypeChecker
 class FramePutRam(LNetFrame):
-    def __init__(self, address: int, size: int, width: int, value: bytearray = []):
-        """
-        responsible for setting up the request frame for MCU to 'Set' the variable value.
+    """
+    FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
+    """
 
-        @param address: address of the variable.
-        @param size: size of the variable.
-        @param value: value to set on the defined variable in byte's
-        @param width: width according to the type of microcontroller
+    def __init__(self, address: int, size: int, width: int, value: bytearray = None):
+        """
+        initialize the FramePutRam instance.
+
+        args:
+            address (int): Address of the variable.
+            size (int): Size of the variable.
+            value (bytearray, optional): Value to set on the defined variable in bytes.
+            width (int): Width according to the type of microcontroller.
         """
         super().__init__()
+        if value is None:
+            value = []
         self.width = width
         self.service_id = 10
         self.address = address
@@ -23,8 +29,10 @@ class FramePutRam(LNetFrame):
 
     def _get_data(self) -> list:
         """
-        _get_data helps the user to get the data of the variable from the MCU
-        @return: list
+        Get the data to be sent in the frame.
+
+        Returns:
+            list: List containing the frame data.
         """
         byte_address = self.address.to_bytes(length=self.width, byteorder="little")
         add_setup = [*byte_address]
@@ -32,10 +40,12 @@ class FramePutRam(LNetFrame):
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
+        set all parameters of the frame.
 
-        @param address: self.address
-        @param size: self.size
-        @param value: self.value
+        args:
+            address (int): Address of the variable.
+            size (int): Size of the variable.
+            value (bytearray): Value to set on the defined variable in bytes.
         """
         self.address = address
         self.size = size
@@ -43,43 +53,71 @@ class FramePutRam(LNetFrame):
 
     def set_size(self, size: int):
         """
-        setting size of Variable for the LNET frame for getRamBlock
-        @rtype: object
-        @param size: int
+        Set the size of the variable for the LNET frame for getRamBlock.
+
+        Args:
+            size (int): Size of the variable.
         """
         self.size = size
 
-    def get_size(self) -> object:
+    def get_size(self) -> int:
         """
-        @return: self.size
+        Get the size of the variable.
+
+        Returns:
+            int: Size of the variable.
         """
         return self.size
 
     def set_address(self, address: int):
+        """
+        Set the address of the variable.
+
+        Args:
+            address (int): Address of the variable.
+        """
         self.address = address
 
-    def get_address(self):
+    def get_address(self) -> int:
         """
-        @return: self.address
+        Get the address of the variable.
+
+        Returns:
+            int: Address of the variable.
         """
         return self.address
 
     def set_user_value(self, value: int):
         """
+        Set the user-defined value for the specific variable.
 
-        @param value: user defined value for the specific variable
+        Args:
+            value (int): User-defined value for the specific variable.
         """
         self.user_value = value
 
-    def get_user_value(self):
+    def get_user_value(self) -> bytearray:
         """
-        @return: self.user_value
+        Get the user-defined value for the specific variable.
+
+        Returns:
+            int: User-defined value for the specific variable.
         """
         return self.user_value
 
-    def _deserialize(self, received: bytearray) -> bytearray:
+    def _deserialize(self, received: bytearray) -> bytearray | None:
+        """
+        Deserializes the received data and returns an error message if applicable.
+
+        Args:
+            received (bytearray): Data received from the MCU.
+
+        Returns:
+            bytearray: Error message if an error occurred, None otherwise.
+        """
         data_received = int(received[-2], 16)
+
         if not data_received == 0:
             return
-        logging.info("Error_id : {}".format(self.error_id(data_received)))
+        logging.info("Error_id: {}".format(self.error_id(data_received)))
         return self.error_id(data_received)
