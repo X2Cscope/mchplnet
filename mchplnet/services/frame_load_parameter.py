@@ -1,3 +1,10 @@
+"""
+FrameLoadParameter
+
+FrameLoadParameter is responsible for loading parameters for scope functionality using the LNet protocol.
+load parameter framework ensures if the scope sampling is done and scope is ready to give buffer output.
+"""
+
 from dataclasses import dataclass
 
 from mchplnet.lnetframe import LNetFrame
@@ -5,12 +12,32 @@ from mchplnet.lnetframe import LNetFrame
 
 @dataclass
 class LoadScopeData:
-    scope_state: int  # Value = 0 Scope is idle and if Value > 0 Scope is busy
-    num_channels: int  # The number of active channels, max 8 channel
-    sample_time_factor: int  # 0 means to sample data at every Update function call. Value 1 means to sample every 2nd...
-    data_array_pointer: int  # This value is for debug purposes only. It points to the next free location in the Scope Data Array for the next dataset to be stored. This value is an index, not a memory address.
-    data_array_address: int  # This value contains the memory address of the Scope Data Array.
-    trigger_delay: int  # This is the current trigger delay value.
+    """
+    dataclass representing the loaded scope data.
+
+    attributes:
+        scope_state (int): Value = zero if the scope is idle, and > zero if the scope is busy.
+        num_channels (int): The number of active channels, max eight channels.
+        sample_time_factor (int): Zero means to sample data at every Update function call.
+                                  value 1 means to sample every 2nd call and so on.
+        data_array_pointer (int): This value is for debug purposes only.
+        it points to the next free location in the
+                                  Scope Data Array for the next dataset to be stored.
+                                  this value is an index, not a memory address.
+        data_array_address (int): This value contains the memory address of the Scope Data Array.
+        trigger_delay (int): The current trigger delay value.
+        trigger_event_position (int): The position of the trigger event.
+        data_array_used_length (int): The length of the used portion of the Scope Data Array.
+        data_array_size (int): The total size of the Scope Data Array.
+        scope_version (int): The version of the scope.
+    """
+
+    scope_state: int
+    num_channels: int
+    sample_time_factor: int
+    data_array_pointer: int
+    data_array_address: int
+    trigger_delay: int
     trigger_event_position: int
     data_array_used_length: int
     data_array_size: int
@@ -18,7 +45,14 @@ class LoadScopeData:
 
 
 class FrameLoadParameter(LNetFrame):
+    """
+    Class responsible for loading parameters using the LNet protocol.
+    """
+
     def __init__(self):
+        """
+        Initialize the FrameLoadParameter instance.
+        """
         super().__init__()
         self.address = None
         self.size = None
@@ -26,8 +60,17 @@ class FrameLoadParameter(LNetFrame):
         self.unique_parameter = 1
 
     def _deserialize(self, received):
+        """
+        Deserializes the received data and returns it as a LoadScopeData instance.
+
+        Args:
+            received (bytearray): Data received from the MCU.
+
+        Returns:
+            LoadScopeData: An instance of LoadScopeData with extracted information.
+        """
         data_bytes = bytes.fromhex("".join(received[5:-1]))
-        # Defining the data structure based on size
+        # Define the data structure based on size
         data_structure = [
             ("scope_state", 1),
             ("num_channels", 1),
@@ -44,7 +87,7 @@ class FrameLoadParameter(LNetFrame):
         # Helper function to extract data
         def extract_data(start, field_size):
             return int.from_bytes(
-                data_bytes[start : start + field_size], byteorder="little", signed=False
+                data_bytes[start: start + field_size], byteorder="little", signed=False
             )
 
         # Extract data according to the data structure
@@ -54,12 +97,13 @@ class FrameLoadParameter(LNetFrame):
             extracted_data[field] = extract_data(start_pos, size)
             start_pos += size
 
-        # Create and return the ScopeData instance
+        # Create and return the LoadScopeData instance
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):
         """
-        Define interface, job of subclass to implement based on the service type
+        Define the interface.
+        It's the job of the subclass to implement based on the service type.
 
         Returns:
             list: DATA part of the frame
