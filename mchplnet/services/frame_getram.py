@@ -3,19 +3,25 @@ FrameGetRam
 
 FrameGetRam enables the function call load parameter of LNet protocol.
 """
+
 from mchplnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):
     """
-    Class implementation: load Parameter function of LNet protocol
+    Class implementation for 'GetRam' frame in the LNet protocol.
+
+    This frame is responsible for setting up the request frame for the MCU to 'Get' the variable value.
     """
 
     def __init__(self, address: int, size: int, width: int):
         """
-        Responsible for setting up the request frame for MCU to 'Get' the variable value.
-        @param address: Address of the variable
-        @param size: Size of the variable
+        initialize the FrameGetRam instance.
+
+        args:
+            address (int): Address of the variable.
+            size (int): Size of the variable.
+            width (int): Width of the variable (in bytes).
         """
         super().__init__()
 
@@ -26,8 +32,10 @@ class FrameGetRam(LNetFrame):
 
     def _get_data(self) -> list:
         """
-        Provides the value of the variable defined by the user.
-        @return: List containing the frame data
+        Get the data to be sent in the frame.
+
+        Returns:
+            list: A list containing the frame data.
         """
         byte_address = self.address.to_bytes(length=self.width, byteorder="little")
         data = [*byte_address]
@@ -37,8 +45,15 @@ class FrameGetRam(LNetFrame):
     def _deserialize(self, received):
         """
         Deserializes the received data and returns it as a bytearray.
-        @param received: Data received from MCU
-        @return: Deserialized bytearray
+
+        Args:
+            received (bytearray): Data received from the MCU.
+
+        Returns:
+            bytearray: Deserialized data as a bytearray.
+
+        Raises:
+            ValueError: If the received data is incomplete or has an invalid size.
         """
         # Check if received data is empty
         if len(received) < 2:
@@ -52,7 +67,7 @@ class FrameGetRam(LNetFrame):
             raise ValueError("Received data size is invalid.")
 
         # Extract the data bytes
-        data_received = received[5 : 5 + size_received_data - 2]
+        data_received = received[5: 5 + size_received_data - 2]
 
         # Convert the data bytes to a bytearray
         b_array = bytearray()
@@ -69,28 +84,36 @@ class FrameGetRam(LNetFrame):
 
     def set_size(self, size: int):
         """
-        Sets the size of the variable for the LNET frame for getRamBlock.
-        @param size: Size of the variable
+        Set the size of the variable for the LNET frame for GetRamBlock.
+
+        Args:
+            size (int): Size of the variable.
         """
         self.size = size
 
     def get_size(self):
         """
-        Returns the size of the variable.
-        @return: Size of the variable
+        Get the size of the variable.
+
+        Returns:
+            int: Size of the variable.
         """
         return self.size
 
     def set_address(self, address: int):
         """
-        Sets the address of the variable.
-        @param address: Address of the variable
+        Set the address of the variable.
+
+        Args:
+            address (int): Address of the variable.
         """
         self.address = address
 
     def get_address(self):
         """
-        Returns the address of the variable.
-        @return: Address of the variable
+        Get the address of the variable.
+
+        Returns:
+            int: Address of the variable.
         """
         return self.address
