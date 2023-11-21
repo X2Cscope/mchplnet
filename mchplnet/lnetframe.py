@@ -1,45 +1,62 @@
 import logging
-
-logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
 
-
-# noinspection PyTypeChecker
 class LNetFrame(ABC):
     """
-    Implements frame structure
+    LNetFrame is an abstract base class that implements the structure of LNet frames.
 
-    SYN SIZE NODE DATA CRC
-    SYN
-    Size: 1 byte
-    Indicates the start of a frame. This byte is always 0x55.
-    The value 0x02 is also reserved for future purposes. These 2 reserved values must be
-    specially treated if they occur in any other frame area than in SYN. (see 3.6)
+    LNet frames consist of several parts, including SYN, SIZE, NODE, DATA, and CRC.
+    The SYN byte indicates the start of a frame and is always 0x55. The SIZE byte
+    represents the number of data bytes in the frame. The NODE byte identifies the
+    target slave node. The DATA area contains the frame's data, and the CRC byte is
+    used for error checking.
 
-    SIZE: 1 byte
-    The number of data bytes.
-    Optional fill-bytes (see 3.6) will not be added to SIZE.
+    Attributes:
+        received (bytearray): The received frame data.
+        service_id (int): The Service ID identifying the type of service.
+        __syn (int): The SYN byte value (always 0x55).
+        __node (int): The NODE byte value (default is 1).
+        data (list): The data part of the frame.
+        crc (int): The calculated CRC value for the frame.
 
-    Slave NODE ID
-    Size: 1 byte
-    Identifies the slave to which the master wants to send the frame.
-    The master sets this byte to the slave ID it wants to communicate with, and the slave sets
-    this byte to its own ID when responding to the master.
+    Methods:
+        _get_data(self) -> list:
+            Abstract method to be implemented by subclasses. Returns the data part of the frame.
 
-    DATA - Implemented by subclasses
-    Size: up to 255 bytes
-    Contain the data. The data area is also divided into several parts. Master and slave use
-    different data structures.
+        serialize(self) -> bytearray:
+            Serialize the frame and add SYN, SIZE, NODE, DATA, and CRC bytes.
 
-        Master data structure (request frame)
-        Data byteNameDescription
-        0 Service IDIdentifies which service will be used
-        1 ... nService data(optional) service data
-    """
+        _crc_checksum(self, list_crc) -> int:
+            Calculate a checksum from the contents of a list.
+
+        _fill_bytes(self, frame) -> list:
+            Handle reserved key values (0x55 and 0x02) in SIZE, NODE, or DATA areas.
+
+        _crc_check(self, received) -> int:
+            Check the CRC of the received frame.
+
+        frame_integrity(self) -> bool:
+            Check the integrity of the received frame by verifying the CRC.
+
+        _check_id(self) -> bool:
+            Check the Service ID and error status in the received frame.
+
+        remove_fill_byte(self):
+            Remove fill bytes (0x00) from the received frame.
+
+        _deserialize(self, received):
+            Abstract method to be implemented by subclasses. Deserialize the frame data.
+
+        error_id(error_id) -> str:
+            Get the error description based on the error ID.
+
+        deserialize(self, received) -> None or object:
+            Save the parameters and check for errors in the received frame.
+        """
 
     def __init__(self):
         """
-        LNet request and response frame setup dependent on the ServiceId and Size of the variable
+        Initialize an LNetFrame instance.
         """
         self.received = None
         self.service_id = None
@@ -51,63 +68,60 @@ class LNetFrame(ABC):
     @abstractmethod
     def _get_data(self):
         """
-        Define interface, job of subclass to implement based on the service type
+        Abstract method to be implemented by subclasses.
+        Define the interface; it's the job of the subclass to implement based on the service type.
 
         Returns:
-            list: DATA part of the frame
+            list: Data part of the frame.
         """
         pass
 
     def serialize(self):
         """
-        This module sets up the whole request frame with provided Service ID, Symbol_size, and Symbol_address
-
-        [syn, size, node, data, crc] as per LNET doc
-
-        It creates the LNET request frame based on the Service-id
-
-        It also calls the function like _add_setup and crc_checksum.
+        Serialize the frame by setting up SYN, SIZE, NODE, DATA, and CRC bytes.
 
         Returns:
-            bytearray: Serialized frame
+            bytearray: Serialized frame.
         """
-        self.data = self._get_data()  # get data from the subclass (actual service)
-        frame_size = len(self.data)  # get the length of the data frame
+        self.data = self._get_data()  # Get data from the subclass (actual service)
+        frame_size = len(self.data)  # Get the length of the data frame
 
         frame = [self.__syn, frame_size, self.__node, *self.data]
         crc = self._crc_checksum(frame)
         frame = [*frame, crc]
         frame_to_send = self._fill_bytes(frame)
 
-        logger.debug("Serialized frame: {}".format(frame_to_send))
-
         return bytearray(frame_to_send)
 
     def _crc_checksum(self, list_crc):
         """
-        A checksum is a value that is calculated from the contents of a file or data to detect changes or errors in
-        transmission.
+        Calculate a checksum from the contents of a list.
+
+        Args:
+            list_crc (list): List of integers to calculate the CRC from.
 
         Returns:
-            int: Calculated CRC
+            int: Calculated CRC.
         """
-        sum_of_frame_data = sum(list_crc)  # summing the string (int)
+        sum_of_frame_data = sum(list_crc)  # Summing the list (int)
 
-        crc_calculation = sum_of_frame_data % 256  # doing the modulo calculation
+        crc_calculation = sum_of_frame_data % 256  # Calculate modulo
 
-        logging.debug("checksum: {}".format(crc_calculation))
+        logging.debug("Checksum: {}".format(crc_calculation))
+
         # Checksum 0x55 == 0xAA   85 == 170
         # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
-
         if crc_calculation == 85:
             crc_calculation = 170
         elif crc_calculation == 2:
             crc_calculation = 253
 
-        self.crc = crc_calculation  # adding the hex checksum to the list of the data
+        self.crc = crc_calculation  # Add the hex checksum to the list of the data
 
         logging.debug(
-            "Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc)
+            "Calculated CRC for the frame: {}  Based on: {}".format(
+                self.crc, list_crc
+            )
         )
 
         return self.crc
@@ -115,14 +129,16 @@ class LNetFrame(ABC):
     @staticmethod
     def _fill_bytes(frame):
         """
-        LNet has 2 reserved key values: 0x55 and 0x02.
-        To avoid misinterpretation within SIZE, NODE, DATA or CRC area, these values must be
-        differently handled.
-        If any of these key values occur within SIZE, NODE, or DATA area, a 0x00'fill_bytes' will be
-        added which will not be counted as data size and not be used in checksum calculation.
+        Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
+
+        If any of these key values occur within SIZE, NODE, or DATA area, a 0x00 'fill_bytes'
+        will be added, which will not be counted as data size and not be used in checksum calculation.
+
+        Args:
+            frame (list): Frame data as a list.
 
         Returns:
-            list: Frame with fill bytes added
+            list: Frame with fill bytes added.
         """
         i = 1
         loop_length = len(frame)
@@ -131,18 +147,18 @@ class LNetFrame(ABC):
                 frame.insert(i + 1, 0)
                 loop_length += 1
             i += 1
-        logger.debug("_fill_bytes assembled frame: {}".format(frame))
+            logging.info(frame)
         return frame
 
     def _crc_check(self, received):
         """
-        This function helps us to check for the CRC of the request frame
+        Check the CRC of the request frame.
 
         Args:
-            received (bytearray): Received frame
+            received (bytearray): Received frame.
 
         Returns:
-            int: CRC value
+            int: CRC value.
         """
         received = list(received)
         received.pop(-1)
@@ -151,9 +167,15 @@ class LNetFrame(ABC):
         return self._crc_checksum(received)
 
     def frame_integrity(self):
+        """
+        Check the integrity of the received frame by verifying the CRC.
+
+        Returns:
+            bool: True if the frame integrity check passes, False otherwise.
+        """
         if self._crc_check(self.received) != int(self.received[-1], 16):
             logging.error(
-                "Crc Checksum doesn't match: {}".format(
+                "CRC Checksum doesn't match: {}".format(
                     self._crc_checksum(self.received)
                 )
             )
@@ -162,9 +184,25 @@ class LNetFrame(ABC):
 
     @abstractmethod
     def _deserialize(self, received):
+        """
+        Abstract method to be implemented by subclasses.
+        Deserialize the frame data.
+
+        Args:
+            received (bytearray): Received frame.
+
+        Returns:
+            None or object: Deserialized frame or None if there are errors.
+        """
         pass
 
     def _check_id(self):
+        """
+        Check the Service ID and error status in the received frame.
+
+        Returns:
+            bool: True if the Service ID and error status are valid, False otherwise.
+        """
         if int(self.received[3], 16) == self.service_id:
             if int(self.received[4], 16) == 0:
                 logging.debug(self.error_id(int(self.received[4], 16)))
@@ -174,6 +212,9 @@ class LNetFrame(ABC):
         return False
 
     def remove_fill_byte(self):
+        """
+        Remove fill bytes (0x00) from the received frame.
+        """
         loop_value = len(self.received)
         z = 1
         while z < loop_value:
@@ -187,13 +228,13 @@ class LNetFrame(ABC):
 
     def deserialize(self, received):
         """
-        This helps us to save the parameters and check for errors in the response frame
+        Save the parameters and check for errors in the response frame.
 
         Args:
-            received (bytearray): Received frame
+            received (bytearray): Received frame.
 
         Returns:
-            None or object: Deserialized frame or None if there are errors
+            None or object: Deserialized frame or None if there are errors.
         """
         self.received = received
         self.remove_fill_byte()
@@ -202,6 +243,15 @@ class LNetFrame(ABC):
 
     @staticmethod
     def error_id(error_id):
+        """
+        Get the error description based on the error ID.
+
+        Args:
+            error_id (int): Error ID.
+
+        Returns:
+            str: Error description.
+        """
         _error_id = {
             0: "No Error",
             19: "Checksum Error",
@@ -224,7 +274,6 @@ class LNetFrame(ABC):
             logging.error("Valid index numbers are: " + _error_id.keys())
             return
         return _error_id[error_id]
-
 
 if __name__ == "__main__":
     logging.debug("Elf_parser.__name__")
