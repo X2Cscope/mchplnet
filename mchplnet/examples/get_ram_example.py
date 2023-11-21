@@ -4,9 +4,6 @@ from mchplnet.interfaces.factory import InterfaceFactory
 from mchplnet.interfaces.factory import InterfaceType as IType
 from mchplnet.lnet import LNet
 
-logging.basicConfig(level=logging.DEBUG)  # Configure the logging module
-
-
 interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM13", baudrate=115200)
 l_net = LNet(interface)
 value = l_net.interface_handshake()
