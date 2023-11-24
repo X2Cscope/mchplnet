@@ -28,7 +28,7 @@ class LNet(object):
         interface_handshake():
             Perform the interface handshake and retrieve device information.
 
-        save_parameter(scope_config: ScopeConfiguration) -> Response:
+        Scope_save_parameter(scope_config: ScopeConfiguration) -> Response:
             Save scope configuration parameters to the microcontroller.
 
         load_parameters() -> LoadScopeData:
@@ -48,7 +48,7 @@ class LNet(object):
         serial_interface = LNetSerial(port="COM1", baud_rate=115200)
         lnet = LNet(serial_interface)
         lnet.interface_handshake()
-        lnet.save_parameter(scope_config)
+        lnet.Scope_save_parameter(scope_config)
     """
 
     def __init__(self, interface: InterfaceABC, handshake: bool = True):
@@ -86,21 +86,26 @@ class LNet(object):
                 response = self._read_data(device_info.serialize())
                 self.device_info = device_info.deserialize(response)
                 self.load_parameter = self.load_parameters()
-
-            return DeviceInfo(
-                monitorVer=self.device_info.monitorVer,
-                appVer=self.device_info.appVer,
-                processorID=self.device_info.processorID,
-                uc_width=self.device_info.uc_width,
-                dsp_state=self.device_info.dsp_state,
-                monitorDate=self.device_info.monitorDate,
-                appDate=self.device_info.appDate,
-            )
+            return self.device_info
+            # return DeviceInfo(
+            #     monitorVer=self.device_info.monitorVer,
+            #     appVer=self.device_info.appVer,
+            #     processorID=self.device_info.processorID,
+            #     uc_width=self.device_info.uc_width,
+            #     dsp_state=self.device_info.dsp_state,
+            #     monitorDate=self.device_info.monitorDate,
+            #     appDate=self.device_info.appDate,
+            #     appTime=self.device_info.appTime,
+            #     eventType=self.device_info.eventType,
+            #     eventID=self.device_info.eventID,
+            #     tableStructAdd=self.device_info.tableStructAdd
+            #
+            # )
         except Exception as e:
             logging.error(e)
             RuntimeError("Failed to retrieve device information.")
 
-    def save_parameter(self, scope_config: ScopeConfiguration):
+    def Scope_save_parameter(self, scope_config: ScopeConfiguration):
         """
         Save scope configuration parameters to the microcontroller.
 
@@ -138,18 +143,19 @@ class LNet(object):
         frame_load_param = FrameLoadParameter()
         response = self._read_data(frame_load_param.serialize())
         extracted_data = frame_load_param.deserialize(response)
-        return LoadScopeData(
-            scope_state=extracted_data.scope_state,
-            num_channels=extracted_data.num_channels,
-            sample_time_factor=extracted_data.sample_time_factor,
-            data_array_pointer=extracted_data.data_array_pointer,
-            data_array_address=extracted_data.data_array_address,
-            trigger_delay=extracted_data.trigger_delay,
-            trigger_event_position=extracted_data.trigger_event_position,
-            data_array_used_length=extracted_data.data_array_used_length,
-            data_array_size=extracted_data.data_array_size,
-            scope_version=extracted_data.scope_version,
-        )
+        return extracted_data
+        # return LoadScopeData(
+        #     scope_state=extracted_data.scope_state,
+        #     num_channels=extracted_data.num_channels,
+        #     sample_time_factor=extracted_data.sample_time_factor,
+        #     data_array_pointer=extracted_data.data_array_pointer,
+        #     data_array_address=extracted_data.data_array_address,
+        #     trigger_delay=extracted_data.trigger_delay,
+        #     trigger_event_position=extracted_data.trigger_event_position,
+        #     data_array_used_length=extracted_data.data_array_used_length,
+        #     data_array_size=extracted_data.data_array_size,
+        #     scope_version=extracted_data.scope_version,
+        # )
 
     def get_ram(self, address: int, size: int) -> bytearray:
         """
