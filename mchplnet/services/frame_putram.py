@@ -21,7 +21,7 @@ class FramePutRam(LNetFrame):
         super().__init__()
         if value is None:
             value = []
-        self.width = width
+        self.value_dataType = width
         self.service_id = 10
         self.address = address
         self.size = size
@@ -34,7 +34,7 @@ class FramePutRam(LNetFrame):
         Returns:
             list: List containing the frame data.
         """
-        byte_address = self.address.to_bytes(length=self.width, byteorder="little")
+        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
         add_setup = [*byte_address]
         return [self.service_id, *add_setup, self.size, *self.user_value]
 
