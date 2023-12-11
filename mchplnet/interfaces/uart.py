@@ -2,6 +2,7 @@ import logging
 import serial
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 
+
 class LNetSerial(InterfaceABC):
     """
     A class representing a serial communication interface for the LNet framework.

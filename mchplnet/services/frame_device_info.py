@@ -21,7 +21,6 @@ from mchplnet.lnetframe import LNetFrame
 
 @dataclass
 class DeviceInfo:
-
     monitorVer: int = 0
     appVer: int = 0
     maxTargetSize = 0
@@ -35,7 +34,6 @@ class DeviceInfo:
     eventType: int = 0
     eventID: int = 0
     tableStructAdd: int = 0
-
 
 
 # noinspection PyTypeChecker
@@ -145,7 +143,9 @@ class FrameDeviceInfo(LNetFrame):
 
         DeviceInfo.appVer = self._app_ver()
         DeviceInfo.monitorVer = self._monitor_ver()
-        DeviceInfo.uc_width = self._Processor_id()  # Returning the width for the address setup in get ram and put ram
+        DeviceInfo.uc_width = (
+            self._Processor_id()
+        )  # Returning the width for the address setup in get ram and put ram
         DeviceInfo.monitorDate = self._monitor_date()
         DeviceInfo.monitorTime = self._monitor_time()
         DeviceInfo.appDate = self._app_date()
@@ -156,7 +156,6 @@ class FrameDeviceInfo(LNetFrame):
         DeviceInfo.tableStructAdd = self._table_struct_add()
 
         return DeviceInfo
-
 
     def _app_ver(self):
         """
@@ -171,11 +170,11 @@ class FrameDeviceInfo(LNetFrame):
         appVer = []
         for i in range(7, 9):
             appVer.append(int(self.received[i], 16))
-        return int.from_bytes(
-            bytes(appVer), byteorder="little"
-        )
+        return int.from_bytes(bytes(appVer), byteorder="little")
 
-    def _monitor_ver(self,):
+    def _monitor_ver(
+        self,
+    ):
         """
         Get the monitor version.
 
@@ -186,12 +185,10 @@ class FrameDeviceInfo(LNetFrame):
             data: The monitor version data.
         """
         monitorVer = []
-        for i in range(5,7):
-            monitorVer.append(int(self.received[i],16))
+        for i in range(5, 7):
+            monitorVer.append(int(self.received[i], 16))
 
-        return int.from_bytes(
-            bytes(monitorVer), byteorder="little"
-        )
+        return int.from_bytes(bytes(monitorVer), byteorder="little")
 
     def _monitor_date(self):
         """
@@ -205,7 +202,6 @@ class FrameDeviceInfo(LNetFrame):
             monitor_date.append(int(self.received[i], 16))
         ascii_chars = [chr(ascii_val) for ascii_val in monitor_date]
         return "".join(ascii_chars)
-
 
     def _monitor_time(self):
         """
@@ -228,10 +224,11 @@ class FrameDeviceInfo(LNetFrame):
             str: Monitor date and time as a string.
         """
         app_date = []
-        for i in range(25,34):
+        for i in range(25, 34):
             app_date.append(int(self.received[i], 16))
         ascii_chars = [chr(ascii_val) for ascii_val in app_date]
         return "".join(ascii_chars)
+
     def _app_time(self):
         """
         Extract and convert monitor date and time from the received data.
@@ -240,10 +237,11 @@ class FrameDeviceInfo(LNetFrame):
             str: Monitor date and time as a string.
         """
         app_time = []
-        for i in range(34,38):
+        for i in range(34, 38):
             app_time.append(int(self.received[i], 16))
         ascii_chars = [chr(ascii_val) for ascii_val in app_time]
         return "".join(ascii_chars)
+
     def _dsp_state(self):
         """
         Get the DSP state as a descriptive string.
@@ -265,7 +263,9 @@ class FrameDeviceInfo(LNetFrame):
 
         return dsp_state.get(int(self.received[38], 16), "Unknown DSP State")
 
-    def _event_type(self,):
+    def _event_type(
+        self,
+    ):
         """
         Get the monitor version.
 
@@ -276,13 +276,14 @@ class FrameDeviceInfo(LNetFrame):
             data: The monitor version data.
         """
         eventtype = []
-        for i in range(39,41):
-            eventtype.append(int(self.received[i],16))
+        for i in range(39, 41):
+            eventtype.append(int(self.received[i], 16))
 
-        return int.from_bytes(
-            bytes(eventtype), byteorder="little"
-        )
-    def _event_id(self,):
+        return int.from_bytes(bytes(eventtype), byteorder="little")
+
+    def _event_id(
+        self,
+    ):
         """
         Get the monitor version.
 
@@ -293,14 +294,14 @@ class FrameDeviceInfo(LNetFrame):
             data: The monitor version data.
         """
         eventid = []
-        for i in range(41,45):
-            eventid.append(int(self.received[i],16))
+        for i in range(41, 45):
+            eventid.append(int(self.received[i], 16))
 
-        return int.from_bytes(
-            bytes(eventid), byteorder="little"
-        )
+        return int.from_bytes(bytes(eventid), byteorder="little")
 
-    def _table_struct_add(self,):
+    def _table_struct_add(
+        self,
+    ):
         """
         Get the monitor version.
 
@@ -311,12 +312,11 @@ class FrameDeviceInfo(LNetFrame):
             data: The monitor version data.
         """
         tableStruct_add = []
-        for i in range(45,49):
-            tableStruct_add.append(int(self.received[i],16))
+        for i in range(45, 49):
+            tableStruct_add.append(int(self.received[i], 16))
 
-        return int.from_bytes(
-            bytes(tableStruct_add), byteorder="little"
-        )
+        return int.from_bytes(bytes(tableStruct_add), byteorder="little")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

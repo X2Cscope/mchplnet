@@ -14,22 +14,23 @@ class FrameGetRam(LNetFrame):
     This frame is responsible for setting up the request frame for the MCU to 'Get' the variable value.
     """
 
-    def __init__(self, address: int, data_type: int, size: int, uc_width: int):
+    def __init__(self, address: int, read_size: int, data_type: int, uc_width: int):
         """
         initialize the FrameGetRam instance.
 
         args:
             address (int): Address of the variable.
-            size (int): Size of the variable.
-            width (int): Width of the variable (in bytes).
+            read_Size (int): number of bytes to be read by the frame from microcontroller.
+            uc_width (int): Width of the variable from microcontroller (in bytes).
+            value_dataType(int): describes the type of the variable (1: 8-bit, 2:16-bit, 4:32-bit)
         """
         super().__init__()
 
         self.service_id = 9
         self.address = address
-        self.read_Size = size
+        self.read_size = read_size
         self.uc_width = uc_width
-        self.value_dataType = data_type
+        self.value_data_type = data_type
 
     def _get_data(self) -> list:
         """
@@ -41,7 +42,7 @@ class FrameGetRam(LNetFrame):
         byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
         data = [*byte_address]
 
-        return [self.service_id, *data, self.read_Size, self.value_dataType]
+        return [self.service_id, *data, self.read_size, self.value_data_type]
 
     def _deserialize(self, received):
         """
@@ -68,7 +69,7 @@ class FrameGetRam(LNetFrame):
             raise ValueError("Received data size is invalid.")
 
         # Extract the data bytes
-        data_received = received[5: 5 + size_received_data - 2]
+        data_received = received[5 : 5 + size_received_data - 2]
 
         # Convert the data bytes to a bytearray
         b_array = bytearray()
@@ -90,7 +91,7 @@ class FrameGetRam(LNetFrame):
         Args:
             size (int): Size of the variable.
         """
-        self.read_Size = size
+        self.read_size = size
 
     def get_size(self):
         """
@@ -99,7 +100,7 @@ class FrameGetRam(LNetFrame):
         Returns:
             int: Size of the variable.
         """
-        return self.read_Size
+        return self.read_size
 
     def set_address(self, address: int):
         """

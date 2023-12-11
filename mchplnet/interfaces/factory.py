@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from mchplnet.interfaces.abstract_interface import InterfaceABC
@@ -6,6 +7,7 @@ from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
 import logging
+
 
 class InterfaceType(Enum):
     SERIAL = 1

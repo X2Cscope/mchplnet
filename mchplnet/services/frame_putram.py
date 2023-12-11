@@ -34,7 +34,9 @@ class FramePutRam(LNetFrame):
         Returns:
             list: List containing the frame data.
         """
-        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
+        byte_address = self.address.to_bytes(
+            length=self.value_dataType, byteorder="little"
+        )
         add_setup = [*byte_address]
         return [self.service_id, *add_setup, self.size, *self.user_value]
 

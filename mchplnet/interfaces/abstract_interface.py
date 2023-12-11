@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class InterfaceABC(ABC):
     """
     An abstract base class defining the interface for a generic interface.

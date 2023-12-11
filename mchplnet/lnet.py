@@ -1,4 +1,7 @@
 import logging
+
+import numpy as np
+
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
@@ -6,29 +9,30 @@ from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScope
 from mchplnet.services.frame_putram import FramePutRam
 from mchplnet.services.frame_save_parameter import (
     FrameSaveParameter,
-    ScopeConfiguration,
+    ScopeSetup,
 )
 
-class LNet(object):
+
+class LNet:
     """
     LNet is a class that handles the LNet logic and services for communication with a microcontroller.
 
-    It provides methods to perform interface handshake, retrieve device information, save scope configuration
+    it provides methods to perform interface handshake, retrieve device information, save scope configuration
     parameters, load scope parameters, read and write data to the microcontroller RAM.
 
-    Attributes:
+    attributes:
         interface (InterfaceABC): The interface used for communication.
         load_parameter (LoadScopeData): Loaded scope parameters.
         device_info (DeviceInfo): Device information retrieved during the handshake.
 
-    Methods:
+    methods:
         __init__(interface: InterfaceABC, handshake: bool = True):
             Initialize the LNet instance.
 
         interface_handshake():
             Perform the interface handshake and retrieve device information.
 
-        Scope_save_parameter(scope_config: ScopeConfiguration) -> Response:
+        scope_save_parameter(scope_config: ScopeConfiguration) -> Response:
             Save scope configuration parameters to the microcontroller.
 
         load_parameters() -> LoadScopeData:
@@ -40,26 +44,26 @@ class LNet(object):
         put_ram(address: int, size: int, value: bytes) -> Response:
             Write data to the microcontroller RAM.
 
-    Raises:
+    raises:
         RuntimeError: If device information is not retrieved before certain operations.
 
-    Example:
+    example:
         # Create an instance of LNet with a serial interface
         serial_interface = LNetSerial(port="COM1", baud_rate=115200)
         lnet = LNet(serial_interface)
         lnet.interface_handshake()
-        lnet.Scope_save_parameter(scope_config)
+        lnet.scope_save_parameter(scope_config)
     """
 
     def __init__(self, interface: InterfaceABC, handshake: bool = True):
         """
-        Initialize the LNet instance.
+        initialize the LNet instance.
 
-        Args:
+        args:
             interface (InterfaceABC): The interface to communicate with.
-            handshake (bool, optional): Perform interface handshake if True. Defaults to True.
+            handshake (bool, optional): Perform interface handshake if True. defaults to True.
 
-        Returns:
+        returns:
             None
         """
         self.load_parameter = None
@@ -105,12 +109,12 @@ class LNet(object):
             logging.error(e)
             RuntimeError("Failed to retrieve device information.")
 
-    def Scope_save_parameter(self, scope_config: ScopeConfiguration):
+    def scope_save_parameter(self, scope_config: ScopeSetup):
         """
         Save scope configuration parameters to the microcontroller.
 
         Args:
-            scope_config (ScopeConfiguration): Scope configuration parameters.
+            scope_config (ScopeSetup): Scope configuration parameters.
 
         Returns:
             Response: Response from the MCU.
@@ -157,24 +161,36 @@ class LNet(object):
         #     scope_version=extracted_data.scope_version,
         # )
 
-    def get_ram(self, address: int, size: int) -> bytearray:
-        """
-        Read data from the microcontroller RAM.
-
-        Args:
-            address (int): The address to read from the microcontroller RAM.
-            size (int): The number of bytes to read from the microcontroller RAM.
-
-        Returns:
-            bytearray: The bytes read from the microcontroller RAM.
-
-        Raises:
-            RuntimeError: If device information is not retrieved before reading RAM.
-        """
+    def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
         if self.device_info is None:
             RuntimeError("Device width is not set. Call device_info() first.")
         get_ram_frame = FrameGetRam(
-            address, size, self.device_info.uc_width
+            address, bytes_to_read, data_type, self.device_info.uc_width
+        )  # Pass self.device_info as an argument
+        response = self._read_data(get_ram_frame.serialize())
+        array = get_ram_frame.deserialize(response)
+        return array
+
+    def get_ram(self, address: int, data_type: int) -> bytearray:
+        """
+        read data from the microcontroller RAM.
+
+        args:
+            address (int): The address to read from the microcontroller RAM.
+            data_type (int): The number of bytes to read from the microcontroller RAM.
+
+        returns:
+            bytearray: The bytes read from the microcontroller RAM.
+
+        raises:
+            RuntimeError: If device information is not retrieved before reading RAM.
+        """
+        bytes_to_read = data_type
+
+        if self.device_info is None:
+            RuntimeError("Device width is not set. Call device_info() first.")
+        get_ram_frame = FrameGetRam(
+            address, bytes_to_read, data_type, self.device_info.uc_width
         )  # Pass self.device_info as an argument
         response = self._read_data(get_ram_frame.serialize())
         response = get_ram_frame.deserialize(response)
@@ -182,17 +198,17 @@ class LNet(object):
 
     def put_ram(self, address: int, size: int, value: bytes):
         """
-        Write data to the microcontroller RAM.
+        write data to the microcontroller RAM.
 
-        Args:
+        args:
             address (int): The address to write to the microcontroller RAM.
             size (int): The number of bytes to write to the microcontroller RAM.
             value (bytes): The bytes to write to the microcontroller RAM.
 
-        Returns:
+        returns:
             Response: Response from the MCU.
 
-        Raises:
+        raises:
             RuntimeError: If device information is not retrieved before writing RAM.
         """
         if self.device_info is None:

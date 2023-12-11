@@ -1,17 +1,21 @@
 import logging
 from abc import ABC, abstractmethod
 
+
 class LNetFrame(ABC):
     """
     LNetFrame is an abstract base class that implements the structure of LNet frames.
 
     LNet frames consist of several parts, including SYN, SIZE, NODE, DATA, and CRC.
-    The SYN byte indicates the start of a frame and is always 0x55. The SIZE byte
-    represents the number of data bytes in the frame. The NODE byte identifies the
-    target slave node. The DATA area contains the frame's data, and the CRC byte is
+    the SYN byte indicates the start of a frame and is always 0x55.
+    the SIZE byte
+    represents the number of data bytes in the frame.
+    the NODE byte identifies the
+    target slave node.
+    the DATA area contains the frame's data, and the CRC byte is
     used for error checking.
 
-    Attributes:
+    attributes:
         received (bytearray): The received frame data.
         service_id (int): The Service ID identifying the type of service.
         __syn (int): The SYN byte value (always 0x55).
@@ -19,9 +23,10 @@ class LNetFrame(ABC):
         data (list): The data part of the frame.
         crc (int): The calculated CRC value for the frame.
 
-    Methods:
+    methods:
         _get_data(self) -> list:
-            Abstract method to be implemented by subclasses. Returns the data part of the frame.
+            Abstract method to be implemented by subclasses.
+            returns the data part of the frame.
 
         serialize(self) -> bytearray:
             Serialize the frame and add SYN, SIZE, NODE, DATA, and CRC bytes.
@@ -45,14 +50,15 @@ class LNetFrame(ABC):
             Remove fill bytes (0x00) from the received frame.
 
         _deserialize(self, received):
-            Abstract method to be implemented by subclasses. Deserialize the frame data.
+            Abstract method to be implemented by subclasses.
+            deserialize the frame data.
 
         error_id(error_id) -> str:
             Get the error description based on the error ID.
 
         deserialize(self, received) -> None or object:
             Save the parameters and check for errors in the received frame.
-        """
+    """
 
     def __init__(self):
         """
@@ -119,9 +125,7 @@ class LNetFrame(ABC):
         self.crc = crc_calculation  # Add the hex checksum to the list of the data
 
         logging.debug(
-            "Calculated CRC for the frame: {}  Based on: {}".format(
-                self.crc, list_crc
-            )
+            "Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc)
         )
 
         return self.crc
@@ -274,6 +278,7 @@ class LNetFrame(ABC):
             logging.error("Valid index numbers are: " + _error_id.keys())
             return
         return _error_id[error_id]
+
 
 if __name__ == "__main__":
     logging.debug("Elf_parser.__name__")

@@ -87,7 +87,7 @@ class FrameLoadParameter(LNetFrame):
         # Helper function to extract data
         def extract_data(start, field_size):
             return int.from_bytes(
-                data_bytes[start: start + field_size], byteorder="little", signed=False
+                data_bytes[start : start + field_size], byteorder="little", signed=False
             )
 
         # Extract data according to the data structure
