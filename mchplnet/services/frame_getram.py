@@ -14,7 +14,7 @@ class FrameGetRam(LNetFrame):
     This frame is responsible for setting up the request frame for the MCU to 'Get' the variable value.
     """
 
-    def __init__(self, address: int, size: int, width: int):
+    def __init__(self, address: int, data_type: int, size: int, uc_width: int):
         """
         initialize the FrameGetRam instance.
 
@@ -27,8 +27,9 @@ class FrameGetRam(LNetFrame):
 
         self.service_id = 9
         self.address = address
-        self.size = size
-        self.width = width
+        self.read_Size = size
+        self.uc_width = uc_width
+        self.value_dataType = data_type
 
     def _get_data(self) -> list:
         """
@@ -37,10 +38,10 @@ class FrameGetRam(LNetFrame):
         Returns:
             list: A list containing the frame data.
         """
-        byte_address = self.address.to_bytes(length=self.width, byteorder="little")
+        byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
         data = [*byte_address]
 
-        return [self.service_id, *data, self.size, self.size]
+        return [self.service_id, *data, self.read_Size, self.value_dataType]
 
     def _deserialize(self, received):
         """
@@ -89,7 +90,7 @@ class FrameGetRam(LNetFrame):
         Args:
             size (int): Size of the variable.
         """
-        self.size = size
+        self.read_Size = size
 
     def get_size(self):
         """
@@ -98,7 +99,7 @@ class FrameGetRam(LNetFrame):
         Returns:
             int: Size of the variable.
         """
-        return self.size
+        return self.read_Size
 
     def set_address(self, address: int):
         """
