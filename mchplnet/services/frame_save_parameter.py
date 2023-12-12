@@ -89,7 +89,7 @@ class ScopeSetup:
     def set_scope_state(self, scope_state: int = 1):
         self.scope_state = scope_state
 
-    def add_channel(self, channel: ScopeChannel, trigger: bool= False) -> int:
+    def add_channel(self, channel: ScopeChannel, trigger: bool= False) -> int:  # TODO implement Trigger
         if channel.name in self.channels:
             return len(self.channels)
         if len(self.channels) > 8:
@@ -114,16 +114,21 @@ class ScopeSetup:
 
     def set_trigger(self, channel: ScopeChannel, trigger_level: int, trigger_mode: int, trigger_delay: int,
                     trigger_edge: int):
+
         if channel is None:
             return False
         self.scope_trigger = ScopeTrigger(
             channel=channel,
-            trigger_level=trigger_level,
+            trigger_level=self.trigger_level_config(trigger_level, channel.data_type_size),
             trigger_delay=trigger_delay,
             trigger_edge=trigger_edge,
             trigger_mode=trigger_mode
         )
         return True
+
+    def trigger_level_config(self, trigger_level, value_data_type):
+        return trigger_level.to_bytes(value_data_type, byteorder='little')
+
 
     def get_buffer(self):
         if not self.channels:
