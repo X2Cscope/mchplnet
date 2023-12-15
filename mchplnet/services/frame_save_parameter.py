@@ -119,7 +119,9 @@ class ScopeSetup:
             return False
         self.scope_trigger = ScopeTrigger(
             channel=channel,
-            trigger_level=self.trigger_level_config(trigger_level, channel.data_type_size),
+            trigger_level= trigger_level,
+
+#            trigger_level=self.trigger_level_config(trigger_level, channel.data_type_size),
             trigger_delay=trigger_delay,
             trigger_edge=trigger_edge,
             trigger_mode=trigger_mode
@@ -161,20 +163,24 @@ class ScopeSetup:
             self.scope_trigger.channel.source_location & 0xFF,
             (self.scope_trigger.channel.source_location >> 8) & 0xFF,
             (self.scope_trigger.channel.source_location >> 16) & 0xFF,
-            (self.scope_trigger.channel.source_location >> 24) & 0xFF,
-            self.scope_trigger.trigger_level & 0xFF,
-            (self.scope_trigger.trigger_level >> 8) & 0xFF,
-            (self.scope_trigger.trigger_level >> 16) & 0xFF,
-            (self.scope_trigger.trigger_level >> 24) & 0xFF,
+            (self.scope_trigger.channel.source_location >> 24) & 0xFF
+        ]
+
+        # Convert trigger_level to bytes and append
+        trigger_level_bytes = self.trigger_level_config(trigger_level=self.scope_trigger.trigger_level, value_data_type= self.scope_trigger.channel.data_type_size)
+        buffer.extend(trigger_level_bytes)
+
+        # Append the rest of the data
+        buffer.extend([
             self.scope_trigger.trigger_delay & 0xFF,
             (self.scope_trigger.trigger_delay >> 8) & 0xFF,
             (self.scope_trigger.trigger_delay >> 16) & 0xFF,
             (self.scope_trigger.trigger_delay >> 24) & 0xFF,
             self.scope_trigger.trigger_edge,
             self.scope_trigger.trigger_mode,
-        ]
-        return buffer
+        ])
 
+        return buffer
     def create_trigger_data_type(self):
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
         ret += 0x20 if self.scope_trigger.channel.is_signed else 0
