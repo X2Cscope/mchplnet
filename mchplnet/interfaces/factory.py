@@ -6,7 +6,6 @@ from mchplnet.interfaces.can import LNetCan
 from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
-import logging
 
 
 class InterfaceType(Enum):

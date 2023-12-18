@@ -12,6 +12,7 @@ logging.basicConfig(
     filename="Scope_save_parameter.log",
 )
 from dataclasses import dataclass
+
 from mchplnet.lnetframe import LNetFrame
 
 
@@ -34,6 +35,7 @@ class ScopeChannel:
     is_integer: bool = False
     is_signed: bool = True
     is_enable: bool = True
+    offset: int = 0
 
 
 @dataclass
@@ -89,7 +91,9 @@ class ScopeSetup:
     def set_scope_state(self, scope_state: int = 1):
         self.scope_state = scope_state
 
-    def add_channel(self, channel: ScopeChannel, trigger: bool= False) -> int:  # TODO implement Trigger
+    def add_channel(
+        self, channel: ScopeChannel, trigger: bool = False
+    ) -> int:  # TODO implement Trigger
         if channel.name in self.channels:
             return len(self.channels)
         if len(self.channels) > 8:
@@ -112,25 +116,37 @@ class ScopeSetup:
     def reset_trigger(self):
         self.scope_trigger = ScopeTrigger()
 
-    def set_trigger(self, channel: ScopeChannel, trigger_level: int, trigger_mode: int, trigger_delay: int,
-                    trigger_edge: int):
-
+    def set_trigger(
+        self,
+        channel: ScopeChannel,
+        trigger_level: int,
+        trigger_mode: int,
+        trigger_delay: int,
+        trigger_edge: int,
+    ):
         if channel is None:
             return False
         self.scope_trigger = ScopeTrigger(
             channel=channel,
-            trigger_level= trigger_level,
-
-#            trigger_level=self.trigger_level_config(trigger_level, channel.data_type_size),
+            trigger_level=trigger_level,
+            #            trigger_level=self.trigger_level_config(trigger_level, channel.data_type_size),
             trigger_delay=trigger_delay,
             trigger_edge=trigger_edge,
-            trigger_mode=trigger_mode
+            trigger_mode=trigger_mode,
         )
         return True
 
-    def trigger_level_config(self, trigger_level, value_data_type):
-        return trigger_level.to_bytes(value_data_type, byteorder='little')
+    def trigger_level_config(self, trigger_level):
+        return trigger_level.to_bytes(
+            self.scope_trigger.channel.data_type_size, byteorder="little", signed=True
+        )
 
+    def data_set_size(self):
+        return sum(channel.data_type_size for channel in self.list_channels().values())
+
+    def trigger_delay_config(self, trigger_delay):
+        sample_number = trigger_delay * self.data_set_size()
+        return sample_number.to_bytes(length=4, byteorder="little", signed=True)
 
     def get_buffer(self):
         if not self.channels:
@@ -163,33 +179,35 @@ class ScopeSetup:
             self.scope_trigger.channel.source_location & 0xFF,
             (self.scope_trigger.channel.source_location >> 8) & 0xFF,
             (self.scope_trigger.channel.source_location >> 16) & 0xFF,
-            (self.scope_trigger.channel.source_location >> 24) & 0xFF
+            (self.scope_trigger.channel.source_location >> 24) & 0xFF,
         ]
 
         # Convert trigger_level to bytes and append
-        trigger_level_bytes = self.trigger_level_config(trigger_level=self.scope_trigger.trigger_level, value_data_type= self.scope_trigger.channel.data_type_size)
+        trigger_level_bytes = self.trigger_level_config(
+            trigger_level=self.scope_trigger.trigger_level
+        )
         buffer.extend(trigger_level_bytes)
 
+        trigger_delay_bytes = self.trigger_delay_config(
+            trigger_delay=self.scope_trigger.trigger_delay
+        )
         # Append the rest of the data
-        buffer.extend([
-            self.scope_trigger.trigger_delay & 0xFF,
-            (self.scope_trigger.trigger_delay >> 8) & 0xFF,
-            (self.scope_trigger.trigger_delay >> 16) & 0xFF,
-            (self.scope_trigger.trigger_delay >> 24) & 0xFF,
-            self.scope_trigger.trigger_edge,
-            self.scope_trigger.trigger_mode,
-        ])
+        buffer.extend(trigger_delay_bytes)
+        buffer.extend(
+            [
+                self.scope_trigger.trigger_edge,
+                self.scope_trigger.trigger_mode,
+            ]
+        )
 
         return buffer
+
     def create_trigger_data_type(self):
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
         ret += 0x20 if self.scope_trigger.channel.is_signed else 0
         ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
         ret += self.scope_trigger.channel.data_type_size  # ._get_width()
         return ret
-
-
-# def get_trigger(self):
 
 
 class FrameSaveParameter(LNetFrame):
@@ -252,13 +270,6 @@ class FrameSaveParameter(LNetFrame):
         save_params.extend(self.scope_setup.get_buffer())
         return save_params
 
-    # def create_trigger_data_type(self, variable: Variable):
-    #     ret = 0x80  # Bit 7 is always set because of "New Scope Version"
-    #     ret += 0x20 if variable.is_signed() else 0
-    #     ret += 0x00 if variable.is_integer() else 0x10
-    #     ret += variable._get_width()
-    #     return ret
-
     def set_scope_configuration(self, scope_config: ScopeSetup):
         """
         Set the scope configuration for the frame.
@@ -286,60 +297,3 @@ class FrameSaveParameter(LNetFrame):
         self.scope_setup = scope_config
         for variable in args:
             self.scope_setup.channels.append(self.create_scope_channel(variable))
-
-    # @staticmethod
-    # def create_scope_channel(variable: Variable):
-    #     return ScopeChannel(
-    #         name=variable.name,
-    #         source_location=variable.address,
-    #         data_type_size=variable._get_width(),
-    #         source_type=0,
-    #     )
-
-
-if __name__ == "__main__":
-    frame = FrameSaveParameter()
-
-    # Set up scope configuration
-    scope_config = ScopeSetup(scope_state=0x01, sample_time_factor=10, channels=[])
-
-    # Add channels to the scope configuration
-    scope_config.channels.append(
-        ScopeChannel(
-            name="Channel 1",
-            source_type=0x00,
-            source_location=0xDEADCAFE,
-            data_type_size=4,
-        )
-    )
-    scope_config.channels.append(
-        ScopeChannel(
-            name="Channel 2",
-            source_type=0x00,
-            source_location=0x8899AABB,
-            data_type_size=2,
-        )
-    )
-
-    # Set up trigger configuration
-    scope_config.scope_trigger = ScopeTrigger(
-        data_type=4,
-        source_type=0x00,
-        source_location=0x12345678,
-        trigger_level=70000,
-        trigger_delay=600,
-        trigger_edge=0x00,
-        trigger_mode=0x01,
-    )
-
-    # Set the scope configuration in the frame
-    frame.set_scope_configuration(scope_config)
-
-    logging.debug(frame._get_data())
-
-    # Remove a channel by name
-    # frame.remove_channel_by_name("Channel 2")
-
-    # Convert to bytes again after removing a channel
-    logging.debug(frame._get_data())
-    print(frame._get_data())

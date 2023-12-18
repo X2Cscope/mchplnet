@@ -7,10 +7,7 @@ from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
 from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
 from mchplnet.services.frame_putram import FramePutRam
-from mchplnet.services.frame_save_parameter import (
-    FrameSaveParameter,
-    ScopeSetup,
-)
+from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
 
 
 class LNet:
@@ -148,18 +145,6 @@ class LNet:
         response = self._read_data(frame_load_param.serialize())
         extracted_data = frame_load_param.deserialize(response)
         return extracted_data
-        # return LoadScopeData(
-        #     scope_state=extracted_data.scope_state,
-        #     num_channels=extracted_data.num_channels,
-        #     sample_time_factor=extracted_data.sample_time_factor,
-        #     data_array_pointer=extracted_data.data_array_pointer,
-        #     data_array_address=extracted_data.data_array_address,
-        #     trigger_delay=extracted_data.trigger_delay,
-        #     trigger_event_position=extracted_data.trigger_event_position,
-        #     data_array_used_length=extracted_data.data_array_used_length,
-        #     data_array_size=extracted_data.data_array_size,
-        #     scope_version=extracted_data.scope_version,
-        # )
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
         if self.device_info is None:
