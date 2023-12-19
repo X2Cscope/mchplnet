@@ -50,14 +50,8 @@ class FrameDeviceInfo(LNetFrame):
         super().__init__()
         self.service_id = 0
 
-    def _get_data(self) -> list:
-        """
-        Get the data to be sent in the frame.
-
-        Returns:
-            list: A list containing the service ID.
-        """
-        return [self.service_id]
+    def _get_data(self):
+        self.data.append(self.service_id)
 
     def _Processor_id(self):
         """

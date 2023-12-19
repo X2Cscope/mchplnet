@@ -74,11 +74,10 @@ class LNetFrame(ABC):
     @abstractmethod
     def _get_data(self):
         """
-        Abstract method to be implemented by subclasses.
-        Define the interface; it's the job of the subclass to implement based on the service type.
+            Append service payload to the member class self.data.
 
-        Returns:
-            list: Data part of the frame.
+            When this method is called, self.data is empty and the service needs
+            to append its own data to the data member class
         """
         pass
 
@@ -89,15 +88,13 @@ class LNetFrame(ABC):
         Returns:
             bytearray: Serialized frame.
         """
-        self.data = self._get_data()  # Get data from the subclass (actual service)
+        self.data.clear()  # clear the data array
+        self._get_data()  # Get data from the subclass (actual service)
         frame_size = len(self.data)  # Get the length of the data frame
-
-        frame = [self.__syn, frame_size, self.__node, *self.data]
-        crc = self._crc_checksum(frame)
-        frame = [*frame, crc]
-        frame_to_send = self._fill_bytes(frame)
-
-        return bytearray(frame_to_send)
+        self.data[:0] = [self.__syn, frame_size, self.__node]  # prepend frame bytes
+        self.data.append(self._crc_checksum(self.data))
+        self._skip_reserved_bytes()
+        return bytearray(self.data)
 
     def _crc_checksum(self, list_crc):
         """
@@ -130,8 +127,7 @@ class LNetFrame(ABC):
 
         return self.crc
 
-    @staticmethod
-    def _fill_bytes(frame):
+    def _skip_reserved_bytes(self):
         """
         Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
 
@@ -145,14 +141,13 @@ class LNetFrame(ABC):
             list: Frame with fill bytes added.
         """
         i = 1
-        loop_length = len(frame)
+        loop_length = len(self.data)
         while i < loop_length:
-            if frame[i] == 2 or frame[i] == 85:
-                frame.insert(i + 1, 0)
+            if self.data[i] == 2 or self.data[i] == 85:
+                self.data.insert(i + 1, 0)
                 loop_length += 1
             i += 1
-            logging.info(frame)
-        return frame
+            logging.info(self.data)
 
     def _crc_check(self, received):
         """

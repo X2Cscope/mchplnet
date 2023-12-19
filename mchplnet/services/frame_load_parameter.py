@@ -87,7 +87,7 @@ class FrameLoadParameter(LNetFrame):
         # Helper function to extract data
         def extract_data(start, field_size):
             return int.from_bytes(
-                data_bytes[start : start + field_size], byteorder="little", signed=True
+                data_bytes[start: start + field_size], byteorder="little", signed=True
             )
 
         # Extract data according to the data structure
@@ -101,15 +101,5 @@ class FrameLoadParameter(LNetFrame):
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):
-        """
-        Define the interface.
-        It's the job of the subclass to implement based on the service type.
-
-        Returns:
-            list: DATA part of the frame
-        """
-        self.unique_parameter = self.unique_parameter.to_bytes(
-            length=2, byteorder="little"
-        )
-        data = [*self.unique_parameter]
-        return [self.service_id, *data]
+        self.unique_parameter = self.unique_parameter.to_bytes(length=2, byteorder="little")
+        self.data.extend([self.service_id, *self.unique_parameter])

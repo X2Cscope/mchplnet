@@ -260,15 +260,9 @@ class FrameSaveParameter(LNetFrame):
         logging.info("Error_id : {}".format(self.error_id(data_received)))
         return self.error_id(data_received)
 
-    def _get_data(self) -> list:
-        """
-        Define the interface to get frame data.
-        Returns:
-            list: DATA part of the frame.
-        """
-        save_params = [self.service_id, *self.unique_ID]
-        save_params.extend(self.scope_setup.get_buffer())
-        return save_params
+    def _get_data(self):
+        self.data.extend([self.service_id, *self.unique_ID])
+        self.data.extend(self.scope_setup.get_buffer())
 
     def set_scope_configuration(self, scope_config: ScopeSetup):
         """

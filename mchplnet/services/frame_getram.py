@@ -32,17 +32,9 @@ class FrameGetRam(LNetFrame):
         self.uc_width = uc_width
         self.value_data_type = data_type
 
-    def _get_data(self) -> list:
-        """
-        Get the data to be sent in the frame.
-
-        Returns:
-            list: A list containing the frame data.
-        """
+    def _get_data(self):
         byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
-        data = [*byte_address]
-
-        return [self.service_id, *data, self.read_size, self.value_data_type]
+        self.data.extend([self.service_id, *byte_address, self.read_size, self.value_data_type])
 
     def _deserialize(self, received):
         """

@@ -27,18 +27,9 @@ class FramePutRam(LNetFrame):
         self.size = size
         self.user_value = value
 
-    def _get_data(self) -> list:
-        """
-        Get the data to be sent in the frame.
-
-        Returns:
-            list: List containing the frame data.
-        """
-        byte_address = self.address.to_bytes(
-            length=self.value_dataType, byteorder="little"
-        )
-        add_setup = [*byte_address]
-        return [self.service_id, *add_setup, self.size, *self.user_value]
+    def _get_data(self):
+        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
+        self.data.extend([self.service_id, *byte_address, self.size, *self.user_value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
