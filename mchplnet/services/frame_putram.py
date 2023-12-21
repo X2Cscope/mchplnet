@@ -1,5 +1,3 @@
-import logging
-
 from mchplnet.lnetframe import LNetFrame
 
 
@@ -19,17 +17,15 @@ class FramePutRam(LNetFrame):
             width (int): Width according to the type of microcontroller.
         """
         super().__init__()
-        if value is None:
-            value = []
         self.value_dataType = width
         self.service_id = 10
         self.address = address
         self.size = size
-        self.user_value = value
+        self.value = bytearray() if value is None else value
 
     def _get_data(self):
         byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
-        self.data.extend([self.service_id, *byte_address, self.size, *self.user_value])
+        self.data.extend([self.service_id, *byte_address, self.size, *self.value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
@@ -42,7 +38,7 @@ class FramePutRam(LNetFrame):
         """
         self.address = address
         self.size = size
-        self.user_value = value
+        self.value = value
 
     def set_size(self, size: int):
         """
@@ -80,14 +76,14 @@ class FramePutRam(LNetFrame):
         """
         return self.address
 
-    def set_user_value(self, value: int):
+    def set_user_value(self, value: bytearray):
         """
         Set the user-defined value for the specific variable.
 
         Args:
-            value (int): User-defined value for the specific variable.
+            value (bytearray): User-defined value for the specific variable.
         """
-        self.user_value = value
+        self.value = value
 
     def get_user_value(self) -> bytearray:
         """
@@ -96,21 +92,10 @@ class FramePutRam(LNetFrame):
         Returns:
             int: User-defined value for the specific variable.
         """
-        return self.user_value
+        return self.value
 
-    def _deserialize(self, received: bytearray) -> bytearray | None:
+    def _deserialize(self):
         """
-        Deserializes the received data and returns an error message if applicable.
-
-        Args:
-            received (bytearray): Data received from the MCU.
-
-        Returns:
-            bytearray: Error message if an error occurred, None otherwise.
+            Nothing to do here once there is no service data on put ram and
+            errors and service id have already being checked by the superclass
         """
-        data_received = int(received[-2], 16)
-
-        if not data_received == 0:
-            return
-        logging.info("Error_id: {}".format(self.error_id(data_received)))
-        return self.error_id(data_received)

@@ -136,16 +136,16 @@ class ScopeSetup:
         )
         return True
 
-    def trigger_level_config(self, trigger_level):
-        return trigger_level.to_bytes(
+    def _trigger_level_to_bytes(self):
+        return self.scope_trigger.trigger_level.to_bytes(
             self.scope_trigger.channel.data_type_size, byteorder="little", signed=True
         )
 
-    def data_set_size(self):
+    def get_dataset_size(self):
         return sum(channel.data_type_size for channel in self.list_channels().values())
 
-    def trigger_delay_config(self, trigger_delay):
-        sample_number = trigger_delay * self.data_set_size()
+    def _trigger_delay_to_bytes(self):
+        sample_number = self.scope_trigger.trigger_delay * self.get_dataset_size()
         return sample_number.to_bytes(length=4, byteorder="little", signed=True)
 
     def get_buffer(self):
@@ -174,7 +174,7 @@ class ScopeSetup:
 
     def _get_scope_trigger_buffer(self):
         buffer = [
-            self.create_trigger_data_type(),
+            self._get_trigger_data_type(),
             self.scope_trigger.channel.source_type,
             self.scope_trigger.channel.source_location & 0xFF,
             (self.scope_trigger.channel.source_location >> 8) & 0xFF,
@@ -182,27 +182,12 @@ class ScopeSetup:
             (self.scope_trigger.channel.source_location >> 24) & 0xFF,
         ]
 
-        # Convert trigger_level to bytes and append
-        trigger_level_bytes = self.trigger_level_config(
-            trigger_level=self.scope_trigger.trigger_level
-        )
-        buffer.extend(trigger_level_bytes)
-
-        trigger_delay_bytes = self.trigger_delay_config(
-            trigger_delay=self.scope_trigger.trigger_delay
-        )
-        # Append the rest of the data
-        buffer.extend(trigger_delay_bytes)
-        buffer.extend(
-            [
-                self.scope_trigger.trigger_edge,
-                self.scope_trigger.trigger_mode,
-            ]
-        )
-
+        buffer.extend(self._trigger_level_to_bytes())
+        buffer.extend(self._trigger_delay_to_bytes())
+        buffer.extend([self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode])
         return buffer
 
-    def create_trigger_data_type(self):
+    def _get_trigger_data_type(self):
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
         ret += 0x20 if self.scope_trigger.channel.is_signed else 0
         ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
@@ -244,21 +229,11 @@ class FrameSaveParameter(LNetFrame):
         self.scope_setup = ScopeSetup()  # only need getter,
         # as its been already initiated at this point and we just use a pointer.
 
-    def _deserialize(self, received: bytearray) -> bytearray | None:
+    def _deserialize(self):
         """
-        Deserialize the frame data.
-
-        Args:
-            received (bytearray): The received data.
-
-        Returns:
-            bytearray | None: The deserialized data or None in case of error.
+            Nothing to do here once there is no service data on save parameter and
+            errors and service id have already being checked by the superclass
         """
-        data_received = int(received[-2], 16)
-        if not data_received == 0:
-            return
-        logging.info("Error_id : {}".format(self.error_id(data_received)))
-        return self.error_id(data_received)
 
     def _get_data(self):
         self.data.extend([self.service_id, *self.unique_ID])

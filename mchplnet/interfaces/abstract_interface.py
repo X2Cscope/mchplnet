@@ -85,7 +85,7 @@ class InterfaceABC(ABC):
         self.stop()
 
     @abstractmethod
-    def write(self, data):
+    def write(self, data: bytearray):
         """
         Write data to the interface.
         Subclasses should implement this method.
@@ -99,16 +99,14 @@ class InterfaceABC(ABC):
         pass
 
     @abstractmethod
-    def read(self):
+    def read(self) -> bytearray:
         """
         Read data from the interface.
-        Subclasses should implement this method.
 
-        Args:
-            None
+        This method includes logic to handle framing, which may be specific to the LNet protocol.
 
         Returns:
-            The data read from the interface.
+            A bytearray read from the interface or None.
         """
         pass
 

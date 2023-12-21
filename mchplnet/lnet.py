@@ -83,28 +83,26 @@ class LNet:
         """
         try:
             if self.device_info is None:  # Check if width is already set
-                device_info = FrameDeviceInfo()
-                response = self._read_data(device_info.serialize())
-                self.device_info = device_info.deserialize(response)
+                self.device_info = self.get_device_info()
                 self.load_parameter = self.load_parameters()
-            return self.device_info
-            # return DeviceInfo(
-            #     monitorVer=self.device_info.monitorVer,
-            #     appVer=self.device_info.appVer,
-            #     processorID=self.device_info.processorID,
-            #     uc_width=self.device_info.uc_width,
-            #     dsp_state=self.device_info.dsp_state,
-            #     monitorDate=self.device_info.monitorDate,
-            #     appDate=self.device_info.appDate,
-            #     appTime=self.device_info.appTime,
-            #     eventType=self.device_info.eventType,
-            #     eventID=self.device_info.eventID,
-            #     tableStructAdd=self.device_info.tableStructAdd
-            #
-            # )
         except Exception as e:
             logging.error(e)
             RuntimeError("Failed to retrieve device information.")
+
+    def get_device_info(self) -> DeviceInfo:
+        """
+        Load from the microcontroller and return a DeviceInfo dataclass.
+
+        Returns:
+            DeviceInfo
+        """
+        device_info = FrameDeviceInfo()
+        device_info.received = self._read_data(device_info.serialize())
+        return device_info.deserialize()
+
+    def _check_device_info(self):
+        if self.device_info is None:
+            RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
 
     def scope_save_parameter(self, scope_config: ScopeSetup):
         """
@@ -119,15 +117,13 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before saving parameters.
         """
-        if self.device_info is None:
-            RuntimeError("Device width is not set. Call device_info() first.")
+        self._check_device_info()
         frame_save_param = FrameSaveParameter()
         frame_save_param.set_scope_configuration(scope_config)
-        response = self._read_data(frame_save_param.serialize())
-        logging.debug(response)
-        # response = frame_save_param.deserialize(response)
-
-        return response
+        frame_save_param.received = self._read_data(frame_save_param.serialize())
+        logging.debug(frame_save_param.received)
+        # return frame_save_param.deserialize()
+        return frame_save_param.received
 
     def load_parameters(self) -> LoadScopeData:
         """
@@ -139,21 +135,18 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before loading parameters.
         """
-        if self.device_info is None:
-            RuntimeError("Device width is not set. Call device_info() first.")
+        self._check_device_info()
         frame_load_param = FrameLoadParameter()
-        response = self._read_data(frame_load_param.serialize())
-        extracted_data = frame_load_param.deserialize(response)
-        return extracted_data
+        frame_load_param.received = self._read_data(frame_load_param.serialize())
+        return frame_load_param.deserialize()
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
-        if self.device_info is None:
-            RuntimeError("Device width is not set. Call device_info() first.")
+        self._check_device_info()
         get_ram_frame = FrameGetRam(
             address, bytes_to_read, data_type, self.device_info.uc_width
         )  # Pass self.device_info as an argument
-        response = self._read_data(get_ram_frame.serialize())
-        array = get_ram_frame.deserialize(response)
+        get_ram_frame.received = self._read_data(get_ram_frame.serialize())
+        array = get_ram_frame.deserialize()
         return array
 
     def get_ram(self, address: int, data_type: int) -> bytearray:
@@ -172,16 +165,12 @@ class LNet:
         """
         bytes_to_read = data_type
 
-        if self.device_info is None:
-            RuntimeError("Device width is not set. Call device_info() first.")
-        get_ram_frame = FrameGetRam(
-            address, bytes_to_read, data_type, self.device_info.uc_width
-        )  # Pass self.device_info as an argument
-        response = self._read_data(get_ram_frame.serialize())
-        response = get_ram_frame.deserialize(response)
-        return response
+        self._check_device_info()
+        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
+        get_ram_frame.received = self._read_data(get_ram_frame.serialize())
+        return get_ram_frame.deserialize()
 
-    def put_ram(self, address: int, size: int, value: bytes):
+    def put_ram(self, address: int, size: int, value: bytearray):
         """
         write data to the microcontroller RAM.
 
@@ -196,12 +185,10 @@ class LNet:
         raises:
             RuntimeError: If device information is not retrieved before writing RAM.
         """
-        if self.device_info is None:
-            RuntimeError("Device width is not set. Call device_info() first.")
+        self._check_device_info()
         put_ram_frame = FramePutRam(address, size, self.device_info.uc_width, value)
-        response = self._read_data(put_ram_frame.serialize())
-        response = put_ram_frame.deserialize(response)
-        return response
+        put_ram_frame.received = self._read_data(put_ram_frame.serialize())
+        return put_ram_frame.deserialize()
 
     def _read_data(self, frame):
         """

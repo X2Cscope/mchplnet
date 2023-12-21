@@ -24,7 +24,7 @@ class DeviceInfo:
     monitorVer: int = 0
     appVer: int = 0
     maxTargetSize = 0
-    processorID: int = 0
+    processor_id: int = 0
     monitorDate: int = 0
     monitorTime: int = 0
     appDate: int = 0
@@ -53,18 +53,15 @@ class FrameDeviceInfo(LNetFrame):
     def _get_data(self):
         self.data.append(self.service_id)
 
-    def _Processor_id(self):
+    def _get_processor_id(self):
         """
         Maps the microcontroller ID to the corresponding value.
 
         Returns:
             int: Microcontroller width (2 for 16-bit uc or 4 for 32-bit uc) or None if not recognized.
         """
-        value1 = int(self.received[10], 16)
-        value2 = int(self.received[11], 16)
-
-        # Combine the values
-        result = hex((value2 << 8) | value1)
+        value = int.from_bytes(self.received[10:12], byteorder="little")
+        hex_value = hex(value)
 
         processor_ids_16_bit = {
             "0x8210": "__GENERIC_MICROCHIP_DSPIC__",
@@ -93,53 +90,22 @@ class FrameDeviceInfo(LNetFrame):
             "0x0251": "__PIC32MX170F256__",
         }
 
-        if result in processor_ids_16_bit:
-            logging.info(f"Processor is: {processor_ids_16_bit.get(result)} :16-bit")
-            DeviceInfo.processorID = processor_ids_16_bit.get(result)
+        if hex_value in processor_ids_16_bit:
+            logging.info(f"Processor is: {processor_ids_16_bit.get(hex_value)} :16-bit")
+            DeviceInfo.processor_id = processor_ids_16_bit.get(hex_value)
             return 2
-        elif result in processor_ids_32_bit:
-            logging.info(f"Processor is: {processor_ids_32_bit.get(result)} :32-bit")
-            DeviceInfo.processorID = processor_ids_32_bit.get(result)
+        elif hex_value in processor_ids_32_bit:
+            logging.info(f"Processor is: {processor_ids_32_bit.get(hex_value)} :32-bit")
+            DeviceInfo.processor_id = processor_ids_32_bit.get(hex_value)
             return 4
         else:
             logging.error(f"Processor is: Unknown")
             return None
 
-    @staticmethod
-    def hand_shake(device_info: int) -> bool:
-        """
-        Check if the device info indicates a successful handshake.
-
-        Args:
-            device_info (int): The device information.
-
-        Returns:
-            bool: True if the handshake is successful, False otherwise.
-        """
-        if device_info == 0:
-            return True
-        return False
-
-    def _deserialize(self, received: bytearray):
-        """
-        Deserializes the received data and extracts relevant information.
-
-        Args:
-            received (bytearray): The received data.
-
-        Returns:
-            DeviceInfo: An instance of DeviceInfo with extracted information.
-        """
-        self.received = received
-        device_info = int(self.received[3], 16)  # Checking if the service id is correct
-        if not self.hand_shake(device_info):
-            return
-
+    def _deserialize(self):
         DeviceInfo.appVer = self._app_ver()
         DeviceInfo.monitorVer = self._monitor_ver()
-        DeviceInfo.uc_width = (
-            self._Processor_id()
-        )  # Returning the width for the address setup in get ram and put ram
+        DeviceInfo.uc_width = self._get_processor_id()
         DeviceInfo.monitorDate = self._monitor_date()
         DeviceInfo.monitorTime = self._monitor_time()
         DeviceInfo.appDate = self._app_date()
@@ -155,34 +121,19 @@ class FrameDeviceInfo(LNetFrame):
         """
         Get the application version.
 
-        Args:
-            data: The application version data.
-
         Returns:
-            data: The application version data.
+            int: The application version data.
         """
-        appVer = []
-        for i in range(7, 9):
-            appVer.append(int(self.received[i], 16))
-        return int.from_bytes(bytes(appVer), byteorder="little")
+        return int.from_bytes(self.received[7:9], byteorder="little")
 
-    def _monitor_ver(
-        self,
-    ):
+    def _monitor_ver(self):
         """
         Get the monitor version.
 
-        Args:
-            data: The monitor version data.
-
         Returns:
-            data: The monitor version data.
+            int: The monitor version data.
         """
-        monitorVer = []
-        for i in range(5, 7):
-            monitorVer.append(int(self.received[i], 16))
-
-        return int.from_bytes(bytes(monitorVer), byteorder="little")
+        return int.from_bytes(self.received[5:7], byteorder="little")
 
     def _monitor_date(self):
         """
@@ -191,11 +142,7 @@ class FrameDeviceInfo(LNetFrame):
         Returns:
             str: Monitor date and time as a string.
         """
-        monitor_date = []
-        for i in range(12, 21):
-            monitor_date.append(int(self.received[i], 16))
-        ascii_chars = [chr(ascii_val) for ascii_val in monitor_date]
-        return "".join(ascii_chars)
+        return "".join([chr(val) for val in self.received[12:21]])
 
     def _monitor_time(self):
         """
@@ -204,11 +151,7 @@ class FrameDeviceInfo(LNetFrame):
         Returns:
             str: Monitor date and time as a string.
         """
-        monitor_time = []
-        for i in range(21, 25):
-            monitor_time.append(int(self.received[i], 16))
-        ascii_chars = [chr(ascii_val) for ascii_val in monitor_time]
-        return "".join(ascii_chars)
+        return "".join([chr(val) for val in self.received[21:25]])
 
     def _app_date(self):
         """
@@ -217,11 +160,7 @@ class FrameDeviceInfo(LNetFrame):
         Returns:
             str: Monitor date and time as a string.
         """
-        app_date = []
-        for i in range(25, 34):
-            app_date.append(int(self.received[i], 16))
-        ascii_chars = [chr(ascii_val) for ascii_val in app_date]
-        return "".join(ascii_chars)
+        return "".join([chr(val) for val in self.received[25:34]])
 
     def _app_time(self):
         """
@@ -230,18 +169,11 @@ class FrameDeviceInfo(LNetFrame):
         Returns:
             str: Monitor date and time as a string.
         """
-        app_time = []
-        for i in range(34, 38):
-            app_time.append(int(self.received[i], 16))
-        ascii_chars = [chr(ascii_val) for ascii_val in app_time]
-        return "".join(ascii_chars)
+        return "".join([chr(val) for val in self.received[34:38]])
 
     def _dsp_state(self):
         """
         Get the DSP state as a descriptive string.
-
-        Args:
-            data: The DSP state data.
 
         Returns:
             str: DSP state description or 'Unknown DSP State' if not recognized.
@@ -254,62 +186,34 @@ class FrameDeviceInfo(LNetFrame):
             0x04: "APPLICATION RUNNING - POWER OFF - Application is running with disabled power electronics",
             0x05: "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics",
         }
+        return dsp_state.get(self.received[38], "Unknown DSP State")
 
-        return dsp_state.get(int(self.received[38], 16), "Unknown DSP State")
-
-    def _event_type(
-        self,
-    ):
+    def _event_type(self):
         """
         Get the monitor version.
 
-        Args:
-            data: The monitor version data.
-
         Returns:
-            data: The monitor version data.
+            int: The monitor version.
         """
-        eventtype = []
-        for i in range(39, 41):
-            eventtype.append(int(self.received[i], 16))
+        return int.from_bytes(self.received[39:41], byteorder="little")
 
-        return int.from_bytes(bytes(eventtype), byteorder="little")
-
-    def _event_id(
-        self,
-    ):
+    def _event_id(self):
         """
         Get the monitor version.
 
-        Args:
-            data: The monitor version data.
+        Returns:
+            int: The monitor version data.
+        """
+        return int.from_bytes(self.received[41:45], byteorder="little")
+
+    def _table_struct_add(self):
+        """
+        Get the table structure add.
 
         Returns:
-            data: The monitor version data.
+            int: The table structure add.
         """
-        eventid = []
-        for i in range(41, 45):
-            eventid.append(int(self.received[i], 16))
-
-        return int.from_bytes(bytes(eventid), byteorder="little")
-
-    def _table_struct_add(
-        self,
-    ):
-        """
-        Get the monitor version.
-
-        Args:
-            data: The monitor version data.
-
-        Returns:
-            data: The monitor version data.
-        """
-        tableStruct_add = []
-        for i in range(45, 49):
-            tableStruct_add.append(int(self.received[i], 16))
-
-        return int.from_bytes(bytes(tableStruct_add), byteorder="little")
+        return int.from_bytes(self.received[45:49], byteorder="little")
 
 
 if __name__ == "__main__":

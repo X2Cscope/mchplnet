@@ -36,45 +36,22 @@ class FrameGetRam(LNetFrame):
         byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
         self.data.extend([self.service_id, *byte_address, self.read_size, self.value_data_type])
 
-    def _deserialize(self, received):
-        """
-        Deserializes the received data and returns it as a bytearray.
-
-        Args:
-            received (bytearray): Data received from the MCU.
-
-        Returns:
-            bytearray: Deserialized data as a bytearray.
-
-        Raises:
-            ValueError: If the received data is incomplete or has an invalid size.
-        """
-        # Check if received data is empty
-        if len(received) < 2:
-            raise ValueError("Received data is incomplete.")
-
+    def _deserialize(self):
         # Extract the size of the received data
-        size_received_data = int(received[1], 16)
+        # [SYN, SIZE, NODE, DATA, CRC]
+        # DATA = [Service-ID, Error-ID, Service data]
+        size_received_data = self.received[1]
+        # Position of initial Service data bytes
+        service_data_begin = 5
+        # Calculate the size of Service data
+        service_data_end = service_data_begin + size_received_data - 2
 
         # Check if received data size is valid
-        if size_received_data < 2 or size_received_data > len(received) - 4:
+        if service_data_end <= service_data_begin:
             raise ValueError("Received data size is invalid.")
 
         # Extract the data bytes
-        data_received = received[5 : 5 + size_received_data - 2]
-
-        # Convert the data bytes to a bytearray
-        b_array = bytearray()
-        for char in data_received:
-            try:
-                i = int.from_bytes(
-                    bytes.fromhex(char), byteorder="little", signed=False
-                )
-                b_array.append(i)
-            except ValueError:
-                raise ValueError("Failed to convert data bytes.")
-
-        return b_array
+        return self.received[service_data_begin:service_data_end]
 
     def set_size(self, size: int):
         """

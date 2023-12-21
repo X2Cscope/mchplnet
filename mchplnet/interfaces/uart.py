@@ -1,4 +1,5 @@
 import logging
+from typing import List, Any
 
 import serial
 
@@ -166,37 +167,19 @@ class LNetSerial(InterfaceABC):
         """
         return self.serial.is_open
 
-    def read(self) -> list:
-        """
-        Read data from the serial port.
-
-        The method reads data from the serial port and handles framing.
-
-        Returns:
-            list: A list of bytes read from the serial port.
-
-        Notes:
-            This method includes logic to handle framing, which may be specific to the LNet protocol.
-        """
+    def read(self):
+        response_list = bytearray()
         if self.serial:
-            response_list = []
             counter = 0
-            i = 0
             read_size = 4
-            while i < read_size:
-                byte = self.serial.read().hex()  # Get in hex
+            while counter < read_size:
+                byte = ord(self.serial.read())
                 response_list.append(byte)
                 counter += 1
-                if counter == 3:
-                    read_size = int(response_list[1], 16) + read_size
-                if i == 0:
+                if counter == 1:
                     pass
-                elif byte == "55" or byte == "02":
+                elif counter == 3:
+                    read_size = response_list[1] + read_size
+                elif byte == 0x55 or byte == 0x02:
                     read_size += 1
-                i += 1
-            if response_list:
-                return response_list
-            else:
-                return None
-        else:
-            return
+        return response_list

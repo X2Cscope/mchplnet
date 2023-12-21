@@ -59,17 +59,14 @@ class FrameLoadParameter(LNetFrame):
         self.service_id = 17
         self.unique_parameter = 1
 
-    def _deserialize(self, received):
+    def _deserialize(self):
         """
         Deserializes the received data and returns it as a LoadScopeData instance.
-
-        Args:
-            received (bytearray): Data received from the MCU.
 
         Returns:
             LoadScopeData: An instance of LoadScopeData with extracted information.
         """
-        data_bytes = bytes.fromhex("".join(received[5:-1]))
+        data_bytes = self.received[5:-1]
         # Define the data structure based on size
         data_structure = [
             ("scope_state", 1),
