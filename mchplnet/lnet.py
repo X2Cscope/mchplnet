@@ -66,6 +66,7 @@ class LNet:
         self.load_parameter = None
         self.interface = interface
         self.device_info = None
+        self.scope_setup = ScopeSetup()
         if handshake:
             self._handshake()  # Perform interface handshake if requested
 
@@ -100,7 +101,7 @@ class LNet:
         if self.device_info is None:
             RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
 
-    def scope_save_parameter(self, scope_config: ScopeSetup):
+    def save_parameter(self):
         """
         Save scope configuration parameters to the microcontroller.
 
@@ -115,11 +116,9 @@ class LNet:
         """
         self._check_device_info()
         frame_save_param = FrameSaveParameter()
-        frame_save_param.set_scope_configuration(scope_config)
+        frame_save_param.set_scope_setup(self.scope_setup)
         frame_save_param.received = self._read_data(frame_save_param.serialize())
-        logging.debug(frame_save_param.received)
-        # return frame_save_param.deserialize()
-        return frame_save_param.received
+        return frame_save_param.deserialize()
 
     def load_parameters(self) -> LoadScopeData:
         """
@@ -201,3 +200,12 @@ class LNet:
         """
         self.interface.write(frame)
         return self.interface.read()
+
+    def get_scope_setup(self) -> ScopeSetup:
+        """
+        Returns the ScopeSetup instance
+
+        Any channel to be monitored or triggered must be handled
+        through this instance of Scope Setup.
+        """
+        return self.scope_setup
