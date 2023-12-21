@@ -84,7 +84,7 @@ class FrameLoadParameter(LNetFrame):
         # Helper function to extract data
         def extract_data(start, field_size):
             return int.from_bytes(
-                data_bytes[start: start + field_size], byteorder="little", signed=True
+                data_bytes[start : start + field_size], byteorder="little", signed=True
             )
 
         # Extract data according to the data structure
@@ -98,5 +98,7 @@ class FrameLoadParameter(LNetFrame):
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):
-        self.unique_parameter = self.unique_parameter.to_bytes(length=2, byteorder="little")
+        self.unique_parameter = self.unique_parameter.to_bytes(
+            length=2, byteorder="little"
+        )
         self.data.extend([self.service_id, *self.unique_parameter])

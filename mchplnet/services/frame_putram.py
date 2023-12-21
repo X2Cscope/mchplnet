@@ -24,7 +24,9 @@ class FramePutRam(LNetFrame):
         self.value = bytearray() if value is None else value
 
     def _get_data(self):
-        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
+        byte_address = self.address.to_bytes(
+            length=self.value_dataType, byteorder="little"
+        )
         self.data.extend([self.service_id, *byte_address, self.size, *self.value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
@@ -96,6 +98,6 @@ class FramePutRam(LNetFrame):
 
     def _deserialize(self):
         """
-            Nothing to do here once there is no service data on put ram and
-            errors and service id have already being checked by the superclass
+        Nothing to do here once there is no service data on put ram and
+        errors and service id have already being checked by the superclass
         """

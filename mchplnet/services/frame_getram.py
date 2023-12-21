@@ -34,7 +34,9 @@ class FrameGetRam(LNetFrame):
 
     def _get_data(self):
         byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
-        self.data.extend([self.service_id, *byte_address, self.read_size, self.value_data_type])
+        self.data.extend(
+            [self.service_id, *byte_address, self.read_size, self.value_data_type]
+        )
 
     def _deserialize(self):
         # Extract the size of the received data

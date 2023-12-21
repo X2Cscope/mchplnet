@@ -74,11 +74,11 @@ class LNetFrame(ABC):
     @abstractmethod
     def _get_data(self):
         """
-            Append service payload to the member class self.data.
+        Append service payload to the member class self.data.
 
-            This method is called by LNetFrame serialize method retrieving specific information from the subclass
-            specialization. When this method is called, self.data is empty and the service needs to append its own
-            data to the data member class
+        This method is called by LNetFrame serialize method retrieving specific information from the subclass
+        specialization. When this method is called, self.data is empty and the service needs to append its own
+        data to the data member class
         """
         pass
 

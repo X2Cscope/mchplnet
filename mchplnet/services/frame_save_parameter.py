@@ -4,7 +4,6 @@ ensures, trigger configuration as well as adding and removing a channel from the
 
 """
 import logging
-from itertools import chain
 from typing import Dict
 
 logging.basicConfig(
@@ -184,7 +183,9 @@ class ScopeSetup:
 
         buffer.extend(self._trigger_level_to_bytes())
         buffer.extend(self._trigger_delay_to_bytes())
-        buffer.extend([self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode])
+        buffer.extend(
+            [self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode]
+        )
         return buffer
 
     def _get_trigger_data_type(self):
@@ -231,8 +232,8 @@ class FrameSaveParameter(LNetFrame):
 
     def _deserialize(self):
         """
-            Nothing to do here once there is no service data on save parameter and
-            errors and service id have already being checked by the superclass
+        Nothing to do here once there is no service data on save parameter and
+        errors and service id have already being checked by the superclass
         """
 
     def _get_data(self):

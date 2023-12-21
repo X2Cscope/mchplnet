@@ -1,13 +1,13 @@
 import logging
 
-import numpy as np
-
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
-from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
+from mchplnet.services.frame_load_parameter import (FrameLoadParameter,
+                                                    LoadScopeData)
 from mchplnet.services.frame_putram import FramePutRam
-from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
+from mchplnet.services.frame_save_parameter import (FrameSaveParameter,
+                                                    ScopeSetup)
 
 
 class LNet:
@@ -67,24 +67,18 @@ class LNet:
         self.interface = interface
         self.device_info = None
         if handshake:
-            self.interface_handshake()  # Perform interface handshake if requested
+            self._handshake()  # Perform interface handshake if requested
 
-    def interface_handshake(self):
+    def _handshake(self):
         """
-        Perform the interface handshake and retrieve device information.
-
-        This method sends a handshake request to the microcontroller and retrieves device information.
-
-        Returns:
-            DeviceInfo: Device information.
+        Retrieve from microcontroller the device_info and load_parameter frames
 
         Raises:
             RuntimeError: If device information is not retrieved successfully.
         """
         try:
-            if self.device_info is None:  # Check if width is already set
-                self.device_info = self.get_device_info()
-                self.load_parameter = self.load_parameters()
+            self.get_device_info()
+            self.load_parameters()
         except Exception as e:
             logging.error(e)
             RuntimeError("Failed to retrieve device information.")
@@ -96,9 +90,11 @@ class LNet:
         Returns:
             DeviceInfo
         """
-        device_info = FrameDeviceInfo()
-        device_info.received = self._read_data(device_info.serialize())
-        return device_info.deserialize()
+        if not self.device_info:
+            device_info = FrameDeviceInfo()
+            device_info.received = self._read_data(device_info.serialize())
+            self.device_info = device_info.deserialize()
+        return self.device_info
 
     def _check_device_info(self):
         if self.device_info is None:
@@ -138,7 +134,8 @@ class LNet:
         self._check_device_info()
         frame_load_param = FrameLoadParameter()
         frame_load_param.received = self._read_data(frame_load_param.serialize())
-        return frame_load_param.deserialize()
+        self.load_parameter = frame_load_param.deserialize()
+        return self.load_parameter
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
         self._check_device_info()
@@ -166,7 +163,9 @@ class LNet:
         bytes_to_read = data_type
 
         self._check_device_info()
-        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
+        get_ram_frame = FrameGetRam(
+            address, bytes_to_read, data_type, self.device_info.uc_width
+        )
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
