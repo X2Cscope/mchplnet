@@ -25,7 +25,6 @@ class InterfaceFactory:
                 LNetSerial,
                 {
                     "port": "Serial port name or device path",
-                    "baudrate": "Baud-rate for the serial communication",
                 },
             ),
             InterfaceType.CAN: (
@@ -47,6 +46,8 @@ class InterfaceFactory:
 
         interface_class, required_params = interfaces[interface_type]
 
+        # TODO: required params should be a task of the interface, an not of the factory
+        # if the parameter is not supplied, it should assume default values
         # Check if all required parameters are provided
         missing_params = [
             param

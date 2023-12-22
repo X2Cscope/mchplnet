@@ -4,6 +4,8 @@
 from dataclasses import dataclass
 from typing import Dict
 
+from mchplnet.services.frame_load_parameter import LoadScopeData
+
 
 @dataclass
 class ScopeChannel:
@@ -64,6 +66,10 @@ class ScopeSetup:
         self.sample_time_factor = 1
         self.channels: Dict[str, ScopeChannel] = {}
         self.scope_trigger = ScopeTrigger()
+        self.scope_data = None
+
+    def set_scope_data(self, scope_data: LoadScopeData):
+        self.scope_data = scope_data
 
     def set_sample_time_factor(self, sample_time_factor: int = 1):
         self.sample_time_factor = sample_time_factor
@@ -98,22 +104,8 @@ class ScopeSetup:
     def reset_trigger(self):
         self.scope_trigger = ScopeTrigger()
 
-    def set_trigger(
-        self,
-        channel: ScopeChannel,
-        trigger_level: int,
-        trigger_mode: int,
-        trigger_delay: int,
-        trigger_edge: int,
-    ):
-        self.scope_trigger = ScopeTrigger(
-            channel=channel,
-            trigger_level=trigger_level,
-            trigger_delay=trigger_delay,
-            trigger_edge=trigger_edge,
-            trigger_mode=trigger_mode,
-        )
-        return True
+    def set_trigger(self, scope_trigger: ScopeTrigger):
+        self.scope_trigger = scope_trigger
 
     def _trigger_level_to_bytes(self):
         return self.scope_trigger.trigger_level.to_bytes(
@@ -121,7 +113,7 @@ class ScopeSetup:
         )
 
     def get_dataset_size(self):
-        return sum(channel.data_type_size for channel in self.list_channels().values())
+        return sum(channel.data_type_size for channel in self.channels.values())
 
     def _trigger_delay_to_bytes(self):
         sample_number = self.scope_trigger.trigger_delay * self.get_dataset_size()
@@ -174,3 +166,37 @@ class ScopeSetup:
         ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
         ret += self.scope_trigger.channel.data_type_size  # ._get_width()
         return ret
+
+    def _read_array_chunks(self, chunk_size=253, data_type=1):
+        chunks = []
+
+        # Calculate the number of chunks
+        num_chunks = self._calc_sda_used_length() // chunk_size
+
+        for i in range(num_chunks):
+            # Calculate the starting address for the current chunk
+            current_address = self.scope_data.data_array_address + i * chunk_size
+
+            try:
+                # Read the chunk of data
+                chunk_data = l_net.get_ram_array(
+                    address=current_address,
+                    data_type=data_type,
+                    bytes_to_read=chunk_size,
+                )
+
+                # Append the chunk data to the list
+                chunks.extend(chunk_data)
+            except Exception as e:
+                logging.error(f"Error reading chunk {i}: {str(e)}")
+
+        extracted_channels = extract_channels(chunks, channel_config())
+
+        extracted_channel_data = convert_data(
+            extracted_channels, variable1.get_width()
+        )  # TODO dynamic width
+        # values = [int.from_bytes(chunks[i:i + 2], byteorder='little') for i in range(0, len(chunks), variable1._get_width())]
+        return extracted_channel_data
+
+    def decode_channels(self):
+        self._read_array_chunks()

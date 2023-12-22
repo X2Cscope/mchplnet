@@ -134,6 +134,7 @@ class LNet:
         frame_load_param = FrameLoadParameter()
         frame_load_param.received = self._read_data(frame_load_param.serialize())
         self.load_parameter = frame_load_param.deserialize()
+        self.scope_setup.set_scope_data(self.load_parameter)
         return self.load_parameter
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
