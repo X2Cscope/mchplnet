@@ -3,11 +3,9 @@ import logging
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
-from mchplnet.services.frame_load_parameter import (FrameLoadParameter,
-                                                    LoadScopeData)
+from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
 from mchplnet.services.frame_putram import FramePutRam
-from mchplnet.services.frame_save_parameter import (FrameSaveParameter,
-                                                    ScopeSetup)
+from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
 
 
 class LNet:
@@ -63,7 +61,7 @@ class LNet:
         returns:
             None
         """
-        self.load_parameter = None
+        self.scope_data = None
         self.interface = interface
         self.device_info = None
         self.scope_setup = ScopeSetup()
@@ -105,9 +103,6 @@ class LNet:
         """
         Save scope configuration parameters to the microcontroller.
 
-        Args:
-            scope_config (ScopeSetup): Scope configuration parameters.
-
         Returns:
             Response: Response from the MCU.
 
@@ -133,9 +128,8 @@ class LNet:
         self._check_device_info()
         frame_load_param = FrameLoadParameter()
         frame_load_param.received = self._read_data(frame_load_param.serialize())
-        self.load_parameter = frame_load_param.deserialize()
-        self.scope_setup.set_scope_data(self.load_parameter)
-        return self.load_parameter
+        self.scope_data = frame_load_param.deserialize()
+        return self.scope_data
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
         self._check_device_info()
