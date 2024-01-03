@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 from mchplnet.lnetframe import LNetFrame
 
+
 class FrameSaveParameter(LNetFrame):
     """
     represents a frame for saving parameters.

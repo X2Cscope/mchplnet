@@ -2,7 +2,6 @@ import logging
 from typing import Any, List
 
 import serial
-
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 
 
