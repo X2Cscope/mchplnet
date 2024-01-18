@@ -19,7 +19,7 @@ class ScopeChannel:
 
     name: str
     source_location: int
-    data_type_size: int
+    data_type_size: int = 0
     source_type: int = 0
     is_integer: bool = False
     is_signed: bool = True
@@ -60,7 +60,7 @@ class ScopeSetup:
     """
 
     def __init__(self):
-        self.scope_state = 1
+        self.scope_state = 2
         self.sample_time_factor = 1
         self.channels: Dict[str, ScopeChannel] = {}
         self.scope_trigger = ScopeTrigger()
@@ -96,15 +96,17 @@ class ScopeSetup:
         return self.channels
 
     def reset_trigger(self):
+        self.scope_state = 2
         self.scope_trigger = ScopeTrigger()
 
     def set_trigger(self, scope_trigger: ScopeTrigger):
+        self.scope_state = 1
         self.scope_trigger = scope_trigger
 
     def _trigger_level_to_bytes(self):
-        return self.scope_trigger.trigger_level.to_bytes(
+        return (self.scope_trigger.trigger_level.to_bytes(
             self.scope_trigger.channel.data_type_size, byteorder="little", signed=True
-        )
+        )) if self.scope_trigger.channel else bytes(2)
 
     def get_dataset_size(self):
         return sum(channel.data_type_size for channel in self.channels.values())
@@ -116,7 +118,6 @@ class ScopeSetup:
     def get_buffer(self):
         if not self.channels:
             return []
-
         buffer = [
             self.scope_state,
             len(self.channels),
@@ -138,14 +139,21 @@ class ScopeSetup:
         return buffer
 
     def _get_scope_trigger_buffer(self):
-        buffer = [
-            self._get_trigger_data_type(),
-            self.scope_trigger.channel.source_type,
-            self.scope_trigger.channel.source_location & 0xFF,
-            (self.scope_trigger.channel.source_location >> 8) & 0xFF,
-            (self.scope_trigger.channel.source_location >> 16) & 0xFF,
-            (self.scope_trigger.channel.source_location >> 24) & 0xFF,
-        ]
+        if self.scope_trigger.channel:
+            buffer = [
+                self._get_trigger_data_type(),
+                self.scope_trigger.channel.source_type,
+                self.scope_trigger.channel.source_location & 0xFF,
+                (self.scope_trigger.channel.source_location >> 8) & 0xFF,
+                (self.scope_trigger.channel.source_location >> 16) & 0xFF,
+                (self.scope_trigger.channel.source_location >> 24) & 0xFF,
+            ]
+        else:
+            buffer = [
+             self._get_trigger_data_type(),
+                0,0,0,0,0
+            ]
+
 
         buffer.extend(self._trigger_level_to_bytes())
         buffer.extend(self._trigger_delay_to_bytes())
@@ -156,7 +164,11 @@ class ScopeSetup:
 
     def _get_trigger_data_type(self):
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
-        ret += 0x20 if self.scope_trigger.channel.is_signed else 0
-        ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
-        ret += self.scope_trigger.channel.data_type_size  # ._get_width()
+        if self.scope_trigger.channel:
+            ret += 0x20 if self.scope_trigger.channel.is_signed else 0
+            ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
+            ret += self.scope_trigger.channel.data_type_size  # ._get_width()
+        else:
+            ret += 2  # ._get_width()
+
         return ret
