@@ -1,7 +1,7 @@
 """
-FrameGetRam
+File: frame_getram.py
 
-FrameGetRam enables the function call load parameter of LNet protocol.
+Usage: FrameGetRam Reads values from target memory address.
 """
 
 from mchplnet.lnetframe import LNetFrame

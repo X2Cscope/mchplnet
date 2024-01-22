@@ -1,3 +1,8 @@
+"""
+File: factory.py
+Usage: Ensures the proper configuration of the communication interface supported by X2Cscope.
+"""
+
 import logging
 from enum import Enum
 

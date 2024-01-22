@@ -58,7 +58,7 @@ class FrameDeviceInfo(LNetFrame):
         Maps the microcontroller ID to the corresponding value.
 
         Returns:
-            int: Microcontroller width (2 for 16-bit uc or 4 for 32-bit uc) or None if not recognized.
+            int: Microcontroller width (2 for 16-bit uc or 4 for 32-bit uc) or None if not in the list of uc defined.
         """
         value = int.from_bytes(self.received[10:12], byteorder="little")
         hex_value = hex(value)
@@ -155,28 +155,33 @@ class FrameDeviceInfo(LNetFrame):
 
     def _app_date(self):
         """
-        Extract and convert monitor date and time from the received data.
+        Extract and convert monitor date from the received data.
 
         Returns:
-            str: Monitor date and time as a string.
+            str: Monitor date as a string.
         """
         return "".join([chr(val) for val in self.received[25:34]])
 
     def _app_time(self):
         """
-        Extract and convert monitor date and time from the received data.
+        Extract and convert monitor time from the received data.
 
         Returns:
-            str: Monitor date and time as a string.
+            str: Monitor time as a string.
         """
         return "".join([chr(val) for val in self.received[34:38]])
 
     def _dsp_state(self):
         """
-        Get the DSP state as a descriptive string.
+        The DSP state indicates the current state of X2C.
 
         Returns:
-            str: DSP state description or 'Unknown DSP State' if not recognized.
+            "MONITOR - Monitor runs on target but no application".
+            "APPLICATION LOADED - Application runs on target (X2Cscope Update function is being executed)".
+            "IDLE - Application is idle (X2Cscope Update Function is not being executed)".
+            "INIT - Application is initializing and usually changes to state 'IDLE' after being finished".
+            "APPLICATION RUNNING - POWER OFF - Application is running with disabled power electronics".
+            "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics".
         """
         dsp_state = {
             0x00: "MONITOR - Monitor runs on target but no application",

@@ -1,25 +1,22 @@
 """
-this framework is responsible to set up the configuration for scope functionality.
-ensures, trigger configuration as well as adding and removing a channel from the scope.
-
+File: frame_save_parameter.py
+Description: This framework is responsible to set up the configuration for scope functionality.
 """
-import logging
-from typing import Dict
 
+import logging
+
+from mchplnet.lnetframe import LNetFrame
 from mchplnet.services.scope import ScopeSetup
 
 logging.basicConfig(
     level=logging.DEBUG,
     filename="Scope_save_parameter.log",
 )
-from dataclasses import dataclass
-
-from mchplnet.lnetframe import LNetFrame
 
 
 class FrameSaveParameter(LNetFrame):
     """
-    represents a frame for saving parameters.
+    The Save Parameter is used to configure the Scope and to start the sampling procedure for the defined variables.
 
     attributes:
         address: The address of the frame.

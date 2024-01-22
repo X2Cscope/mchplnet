@@ -1,8 +1,7 @@
 """
-FrameLoadParameter
-
-FrameLoadParameter is responsible for loading parameters for scope functionality using the LNet protocol.
-load parameter framework ensures if the scope sampling is done and scope is ready to give buffer output.
+File: frame_loadLoadParameter.py
+Usage: FrameLoadParameter is responsible for loading parameters, which are used to get the Scope Data Array address
+and maximum size for once, as well as to check the current scope state.
 """
 
 from dataclasses import dataclass
@@ -60,14 +59,7 @@ class FrameLoadParameter(LNetFrame):
         self.unique_parameter = 1
 
     def _deserialize(self):
-        """
-        Deserializes the received data and returns it as a LoadScopeData instance.
-
-        Returns:
-            LoadScopeData: An instance of LoadScopeData with extracted information.
-        """
         data_bytes = self.received[5:-1]
-        # Define the data structure based on size
         data_structure = [
             ("scope_state", 1),
             ("num_channels", 1),
@@ -81,20 +73,16 @@ class FrameLoadParameter(LNetFrame):
             ("scope_version", 1),
         ]
 
-        # Helper function to extract data
-        def extract_data(start, field_size):
-            return int.from_bytes(
-                data_bytes[start : start + field_size], byteorder="little", signed=True
-            )
-
-        # Extract data according to the data structure
         extracted_data = {}
         start_pos = 0
         for field, size in data_structure:
-            extracted_data[field] = extract_data(start_pos, size)
+            extracted_data[field] = int.from_bytes(
+                data_bytes[start_pos : start_pos + size],
+                byteorder="little",
+                signed=True,
+            )
             start_pos += size
 
-        # Create and return the LoadScopeData instance
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):

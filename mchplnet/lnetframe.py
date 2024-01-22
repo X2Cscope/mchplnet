@@ -162,8 +162,8 @@ class LNetFrame(ABC):
         """
         Deserialize the frame data stored on class member 'received'.
 
-        Returns:
-            None or object: Deserialized frame or None if there are errors.
+        Returns: None or object: Deserialize frame for the respected service ID and provide required Data or None if
+        there are errors.
         """
         pass
 

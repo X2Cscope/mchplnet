@@ -1,5 +1,6 @@
-"""Scope classes needed to implement scope functionality being called under frame_save_parameter"""
-
+"""
+Scope classes needed to implement scope functionality being called under frame_save_parameter
+"""
 
 from dataclasses import dataclass
 from typing import Dict
@@ -8,15 +9,18 @@ from typing import Dict
 @dataclass
 class ScopeChannel:
     """
-    represents a scope channel configuration.
+    Represents a scope channel configuration.
 
-    attributes:
+    Attributes:
         name (str): The name of the channel.
-        source_type (int): The source type of the channel.
-        source_location (int): The source location of the channel.
-        data_type_size (int): The size of the data type used by the channel.
+        source_location (int): The memory address or source location of the channel data in the microcontroller.
+        data_type_size (int): The size (in bytes) of the data type used by the channel.
+        source_type (int): The source type identifier for the channel. Default is 0.
+        is_integer (bool): Flag indicating if the data type is an integer. Default is False.
+        is_signed (bool): Flag indicating if the data type is signed. Default is True.
+        is_enable (bool): Flag indicating if the channel is enabled. Default is True.
+        offset (int): Offset value for the data. Default is 0.
     """
-
     name: str
     source_location: int
     data_type_size: int = 0
@@ -33,13 +37,12 @@ class ScopeTrigger:
     Scope trigger configuration.
 
     Attributes:
-        channel: (:func:`ScopeChannel`): the channel to trigger
-        trigger_level (int): The trigger level.
-        trigger_delay (int): The trigger delay.
-        trigger_edge (int): For Rising Edge, set the value to 0x01 and for falling 0x00
-        trigger_mode (int): The trigger mode.
+        channel (ScopeChannel): The channel to use as a trigger source.
+        trigger_level (int): The level at which the trigger should activate.
+        trigger_delay (int): The delay after the trigger activation before data collection starts.
+        trigger_edge (int): Indicates the edge type for triggering (Rising Edge = 0x01, Falling Edge = 0x00).
+        trigger_mode (int): The mode of triggering.
     """
-
     channel: ScopeChannel = None
     trigger_level: int = 0
     trigger_delay: int = 0
@@ -49,14 +52,17 @@ class ScopeTrigger:
 
 class ScopeSetup:
     """
-    represents a scope configuration.
+    Represents a scope configuration setup.
+
+    This class handles the configuration of the scope including channels, trigger settings,
+    and managing the data buffer.
 
     Attributes:
-        scope_state (int): The state of the scope.
-        0x02 is Auto without Trigger, 0x01 is Normal with Trigger.
-        sample_time_factor (int): Can be used to extend the total sampling time at the cost of sampling resolution.
-        channels (List[ScopeChannel]): List of scope channels.
-        scope_trigger (ScopeTrigger): The scope trigger configuration (optional).
+        scope_state (int): The state of the scope. (0x02 for Auto without Trigger, 0x01 for Normal with Trigger).
+        sample_time_factor (int): This parameter defines a pre-scaler when the Scope is in the sampling mode.
+        This parameter can be used to extend the total sampling time at the cost of sampling resolution.
+        channels (Dict[str, ScopeChannel]): Dictionary of scope channels keyed by their names.
+        scope_trigger (ScopeTrigger): Configuration for the scope trigger.
     """
 
     def __init__(self):
@@ -66,12 +72,34 @@ class ScopeSetup:
         self.scope_trigger = ScopeTrigger()
 
     def set_sample_time_factor(self, sample_time_factor: int = 1):
+        """
+        Set the sample time factor for the scope. Default is 1
+
+        Args:
+            sample_time_factor (int): The sample time factor to be set.
+        """
         self.sample_time_factor = sample_time_factor
 
     def set_scope_state(self, scope_state: int = 1):
+        """
+        Set the scope state manually. 2 for Auto mode without Trigger, 1 for Normal mode with Trigger.
+
+        Args:
+            scope_state (int): The state to be set for the scope.
+        """
         self.scope_state = scope_state
 
     def add_channel(self, channel: ScopeChannel, trigger: bool = False) -> int:
+        """
+        Add a new channel to the scope configuration.
+
+        Args:
+            channel (ScopeChannel): The channel to be added.
+            trigger (bool): If True, sets this channel as the trigger source. Defaults to False.
+
+        Returns:
+            int: The total number of channels after addition or -1 if the limit is exceeded. Max allowed channels are 8.
+        """
         if channel.name not in self.channels:
             if len(self.channels) > 8:
                 return -1
@@ -82,40 +110,102 @@ class ScopeSetup:
         return len(self.channels)
 
     def remove_channel(self, channel_name: str):
+        """
+        Remove a channel from the scope configuration.
+
+        Args:
+            channel_name (str): The name of the channel to be removed.
+        """
         if channel_name in self.channels:
             self.channels.pop(channel_name)
             if self.scope_trigger.channel.name == channel_name:
                 self.reset_trigger()
 
     def get_channel(self, channel_name: str):
+        """
+        Get a channel by its name.
+
+        Args:
+            channel_name (str): The name of the channel to retrieve.
+
+        Returns:
+            ScopeChannel: The requested channel or None if not found.
+        """
         if channel_name in self.channels:
             return self.channels[channel_name]
         return None
 
-    def list_channels(self) -> dict[str, ScopeChannel]:
+    def list_channels(self) -> Dict[str, ScopeChannel]:
+        """
+        List all channels in the scope configuration.
+
+        Returns:
+            Dict[str, ScopeChannel]: A dictionary of all channels.
+        """
         return self.channels
 
     def reset_trigger(self):
+        """
+        Reset the trigger configuration to default.
+        """
         self.scope_state = 2
         self.scope_trigger = ScopeTrigger()
 
     def set_trigger(self, scope_trigger: ScopeTrigger):
+        """
+        Set a custom trigger configuration.
+
+        Args:
+            scope_trigger (ScopeTrigger): The custom trigger configuration to be set.
+        """
         self.scope_state = 1
         self.scope_trigger = scope_trigger
 
     def _trigger_level_to_bytes(self):
-        return (self.scope_trigger.trigger_level.to_bytes(
-            self.scope_trigger.channel.data_type_size, byteorder="little", signed=True
-        )) if self.scope_trigger.channel else bytes(2)
+        """
+        Convert user defined trigger level to a byte array.
+
+        Returns:
+            bytearray: The trigger level in byte format.
+        """
+        return (
+            (
+                self.scope_trigger.trigger_level.to_bytes(
+                    self.scope_trigger.channel.data_type_size,
+                    byteorder="little",
+                    signed=True,
+                )
+            )
+            if self.scope_trigger.channel
+            else bytes(2)
+        )
 
     def get_dataset_size(self):
+        """
+        Calculate the size of the complete dataset from all channels.
+
+        Returns:
+            int: The total size of the dataset.
+        """
         return sum(channel.data_type_size for channel in self.channels.values())
 
     def _trigger_delay_to_bytes(self):
+        """
+        Convert user defined trigger delay to a byte array.
+
+        Returns:
+            bytearray: The trigger delay in byte format.
+        """
         sample_number = self.scope_trigger.trigger_delay * self.get_dataset_size()
         return sample_number.to_bytes(length=4, byteorder="little", signed=True)
 
     def get_buffer(self):
+        """
+        Get the buffer containing the current scope configuration.
+
+        Returns:
+            List[int]: A list consist of the scope configuration buffer.
+        """
         if not self.channels:
             return []
         buffer = [
@@ -139,6 +229,12 @@ class ScopeSetup:
         return buffer
 
     def _get_scope_trigger_buffer(self):
+        """
+        Get the buffer for the scope trigger configuration.
+
+        Returns:
+            List[int]: A list consist of the scope trigger configuration buffer.
+        """
         if self.scope_trigger.channel:
             buffer = [
                 self._get_trigger_data_type(),
@@ -149,11 +245,7 @@ class ScopeSetup:
                 (self.scope_trigger.channel.source_location >> 24) & 0xFF,
             ]
         else:
-            buffer = [
-             self._get_trigger_data_type(),
-                0,0,0,0,0
-            ]
-
+            buffer = [self._get_trigger_data_type(), 0, 0, 0, 0, 0]
 
         buffer.extend(self._trigger_level_to_bytes())
         buffer.extend(self._trigger_delay_to_bytes())
@@ -163,6 +255,12 @@ class ScopeSetup:
         return buffer
 
     def _get_trigger_data_type(self):
+        """
+        Get the data type for the scope trigger.
+
+        Returns:
+            int: The trigger data type.
+        """
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
         if self.scope_trigger.channel:
             ret += 0x20 if self.scope_trigger.channel.is_signed else 0

@@ -1,3 +1,8 @@
+"""
+File: frame_putram.py
+Description: This module writes user defined values to target memory address.
+"""
+
 from mchplnet.lnetframe import LNetFrame
 
 
@@ -31,7 +36,7 @@ class FramePutRam(LNetFrame):
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
-        set all parameters of the frame.
+        set all parameters manually of the frame.
 
         args:
             address (int): Address of the variable.
@@ -44,7 +49,7 @@ class FramePutRam(LNetFrame):
 
     def set_size(self, size: int):
         """
-        Set the size of the variable for the LNET frame for getRamBlock.
+        Set the size of the variable (Bytes).
 
         Args:
             size (int): Size of the variable.
@@ -62,7 +67,7 @@ class FramePutRam(LNetFrame):
 
     def set_address(self, address: int):
         """
-        Set the address of the variable.
+        Set manually the address of the variable.
 
         Args:
             address (int): Address of the variable.
@@ -71,7 +76,7 @@ class FramePutRam(LNetFrame):
 
     def get_address(self) -> int:
         """
-        Get the address of the variable.
+        Get the memory address of the variable.
 
         Returns:
             int: Address of the variable.
