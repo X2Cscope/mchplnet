@@ -13,7 +13,7 @@ Usage:
     - Utilize the `FrameDeviceInfo` class to deserialize received data and retrieve device information.
 
 """
-
+import logging
 from dataclasses import dataclass
 
 from mchplnet.lnetframe import LNetFrame
@@ -23,38 +23,45 @@ from mchplnet.lnetframe import LNetFrame
 class DeviceInfo:
     monitorVer: int = 0
     appVer: int = 0
-    processorID: int = 0
+    maxTargetSize = 0
+    processor_id: int = 0
     monitorDate: int = 0
+    monitorTime: int = 0
     appDate: int = 0
+    appTime: int = 0
     uc_width: int = 0
     dsp_state: int = 0
+    eventType: int = 0
+    eventID: int = 0
+    tableStructAdd: int = 0
 
 
 # noinspection PyTypeChecker
 class FrameDeviceInfo(LNetFrame):
+    """
+    Custom frame for device information retrieval and interpretation.
+    Inherits from LNetFrame.
+    """
+
     def __init__(self):
         """
-        This frame is responsible for Hand-Shake, Monitor-Version, Identifying processor Type, Application Version.
+        Initialize the FrameDeviceInfo class.
         """
         super().__init__()
         self.service_id = 0
 
-    def _get_data(self) -> list:
-        """
-        provides the value of the variable defined by the user.
-        @return: list
-        """
-        return [self.service_id]
+    def _get_data(self):
+        self.data.append(self.service_id)
 
-    def _uc_id(self):
+    def _get_processor_id(self):
         """
         Maps the microcontroller ID to the corresponding value.
-        """
-        value1 = int(self.received[10], 16)
-        value2 = int(self.received[11], 16)
 
-        # Combine the values
-        result = hex((value2 << 8) | value1)
+        Returns:
+            int: Microcontroller width (2 for 16-bit uc or 4 for 32-bit uc) or None if not in the list of uc defined.
+        """
+        value = int.from_bytes(self.received[10:12], byteorder="little")
+        hex_value = hex(value)
 
         processor_ids_16_bit = {
             "0x8210": "__GENERIC_MICROCHIP_DSPIC__",
@@ -76,7 +83,6 @@ class FrameDeviceInfo(LNetFrame):
         }
 
         processor_ids_32_bit = {
-            "0x8110": "__GENERIC_TI_C28X__",
             "0x8220": "__GENERIC_MICROCHIP_PIC32__",
             "0x8320": "__GENERIC_ARM_ARMV6__",
             "0x8310": "__GENERIC_ARM_ARMV7__",
@@ -84,114 +90,136 @@ class FrameDeviceInfo(LNetFrame):
             "0x0251": "__PIC32MX170F256__",
         }
 
-        if result in processor_ids_16_bit:
+        if hex_value in processor_ids_16_bit:
+            logging.info(f"Processor is: {processor_ids_16_bit.get(hex_value)} :16-bit")
+            DeviceInfo.processor_id = processor_ids_16_bit.get(hex_value)
             return 2
-        elif result in processor_ids_32_bit:
+        elif hex_value in processor_ids_32_bit:
+            logging.info(f"Processor is: {processor_ids_32_bit.get(hex_value)} :32-bit")
+            DeviceInfo.processor_id = processor_ids_32_bit.get(hex_value)
             return 4
         else:
+            logging.error(f"Processor is: Unknown")
             return None
 
-    @staticmethod
-    def hand_shake(device_info: int) -> bool:
-        """
-        Checks if the device info is 0 (indicating successful interface_handshake).
-        """
-        if device_info == 0:
-            return True
-        return False
-
-    def processor_id(self):
-        """ """
-        value1 = int(self.received[10], 16)
-        value2 = int(self.received[11], 16)
-
-        # Combine the values
-        result = hex((value2 << 8) | value1)
-
-        processor_dict = {
-            "0x8210": "__GENERIC_MICROCHIP_DSPIC__",
-            "0x8220": "__GENERIC_MICROCHIP_PIC32__",
-            "0x8230": "__GENERIC_MICROCHIP_PIC24__",
-            "0x8310": "__GENERIC_ARM_ARMV7__",
-            "0x8320": "__GENERIC_ARM_ARMV6__",
-            "0x0221": "__DSPIC33FJ256MC710__",
-            "0x0222": "__DSPIC33FJ128MC706__",
-            "0x0223": "__DSPIC33FJ128MC506__",
-            "0x0224": "__DSPIC33FJ64GS610__",
-            "0x0225": "__DSPIC33FJ64GS406__",
-            "0x0226": "__DSPIC33FJ12GP202__",
-            "0x0228": "__DSPIC33FJ128MC802__",
-            "0x0231": "__DSPIC33EP256MC506__",
-            "0x0232": "__DSPIC33EP128GP502__",
-            "0x0233": "__DSPIC33EP32GP502__",
-            "0x0234": "__DSPIC33EP256GP502__",
-            "0x0235": "__DSPIC33EP256MC502__",
-            "0x0236": "__DSPIC33EP128MC202__",
-            "0x0237": "__DSPIC33EP128GM604__",
-            "0x0241": "__PIC32MZ2048EC__",
-            "0x0251": "__PIC32MX170F256__",
-        }
-
-        return processor_dict.get(result, "Unknown Processor")
-
-    def _deserialize(self, received: bytearray):
-        """
-        Deserializes the received data and extracts relevant information.
-        """
-        self.received = received
-        device_info = int(self.received[3], 16)  # Checking if the service id is correct
-        if not self.hand_shake(device_info):
-            return
-        monitor_id = int(self.received[5], 16)
-        app_ver_id = int(self.received[7], 16)
-        dsp_state = int(self.received[38], 16)
-
-        DeviceInfo.appVer = self._app_ver(app_ver_id)
-        DeviceInfo.monitorVer = self._monitor_ver(monitor_id)
-        DeviceInfo.uc_width = (
-            self._uc_id()
-        )  # Returning the width for the address setup in get ram and put ram
+    def _deserialize(self):
+        DeviceInfo.appVer = self._app_ver()
+        DeviceInfo.monitorVer = self._monitor_ver()
+        DeviceInfo.uc_width = self._get_processor_id()
         DeviceInfo.monitorDate = self._monitor_date()
-        DeviceInfo.dsp_state = self._dsp_state(dsp_state)
-        DeviceInfo.processorID = self.processor_id()
+        DeviceInfo.monitorTime = self._monitor_time()
+        DeviceInfo.appDate = self._app_date()
+        DeviceInfo.appTime = self._app_time()
+        DeviceInfo.dsp_state = self._dsp_state()
+        DeviceInfo.eventType = self._event_type()
+        DeviceInfo.eventID = self._event_id()
+        DeviceInfo.tableStructAdd = self._table_struct_add()
+
         return DeviceInfo
 
-    @staticmethod
-    def _app_ver(data):
+    def _app_ver(self):
         """
-        Returns the application version.
-        """
-        return data
+        Get the application version.
 
-    @staticmethod
-    def _monitor_ver(data):
+        Returns:
+            int: The application version data.
         """
-        Returns the monitor version.
+        return int.from_bytes(self.received[7:9], byteorder="little")
+
+    def _monitor_ver(self):
         """
-        return data
+        Get the monitor version.
+
+        Returns:
+            int: The monitor version data.
+        """
+        return int.from_bytes(self.received[5:7], byteorder="little")
 
     def _monitor_date(self):
         """
-        Extracts and converts monitor date and time from the received data.
-        """
-        monitor_date_time = []
-        for i in range(12, 21):
-            monitor_date_time.append(int(self.received[i], 16))
-        ascii_chars = [chr(ascii_val) for ascii_val in monitor_date_time]
-        return "".join(ascii_chars)
+        Extract and convert monitor date and time from the received data.
 
-    @staticmethod
-    def _dsp_state(data):
+        Returns:
+            str: Monitor date and time as a string.
         """
-        Returns the DSP state as a descriptive string.
+        return "".join([chr(val) for val in self.received[12:21]])
+
+    def _monitor_time(self):
+        """
+        Extract and convert monitor date and time from the received data.
+
+        Returns:
+            str: Monitor date and time as a string.
+        """
+        return "".join([chr(val) for val in self.received[21:25]])
+
+    def _app_date(self):
+        """
+        Extract and convert monitor date from the received data.
+
+        Returns:
+            str: Monitor date as a string.
+        """
+        return "".join([chr(val) for val in self.received[25:34]])
+
+    def _app_time(self):
+        """
+        Extract and convert monitor time from the received data.
+
+        Returns:
+            str: Monitor time as a string.
+        """
+        return "".join([chr(val) for val in self.received[34:38]])
+
+    def _dsp_state(self):
+        """
+        The DSP state indicates the current state of X2C.
+
+        Returns:
+            "MONITOR - Monitor runs on target but no application".
+            "APPLICATION LOADED - Application runs on target (X2Cscope Update function is being executed)".
+            "IDLE - Application is idle (X2Cscope Update Function is not being executed)".
+            "INIT - Application is initializing and usually changes to state 'IDLE' after being finished".
+            "APPLICATION RUNNING - POWER OFF - Application is running with disabled power electronics".
+            "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics".
         """
         dsp_state = {
             0x00: "MONITOR - Monitor runs on target but no application",
-            0x01: "APPLICATION LOADED - Application runs on target (X2C Update function is being executed)",
-            0x02: "IDLE - Application is idle (X2C Update Function is not being executed)",
+            0x01: "APPLICATION LOADED - Application runs on target (X2Cscope Update function is being executed)",
+            0x02: "IDLE - Application is idle (X2Cscope Update Function is not being executed)",
             0x03: "INIT - Application is initializing and usually changes to state 'IDLE' after being finished",
             0x04: "APPLICATION RUNNING - POWER OFF - Application is running with disabled power electronics",
             0x05: "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics",
         }
+        return dsp_state.get(self.received[38], "Unknown DSP State")
 
-        return dsp_state.get(data, "Unknown DSP State")
+    def _event_type(self):
+        """
+        Get the monitor version.
+
+        Returns:
+            int: The monitor version.
+        """
+        return int.from_bytes(self.received[39:41], byteorder="little")
+
+    def _event_id(self):
+        """
+        Get the monitor version.
+
+        Returns:
+            int: The monitor version data.
+        """
+        return int.from_bytes(self.received[41:45], byteorder="little")
+
+    def _table_struct_add(self):
+        """
+        Get the table structure add.
+
+        Returns:
+            int: The table structure add.
+        """
+        return int.from_bytes(self.received[45:49], byteorder="little")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)

@@ -1,85 +1,108 @@
-import logging
+"""
+File: frame_putram.py
+Description: This module writes user defined values to target memory address.
+"""
 
 from mchplnet.lnetframe import LNetFrame
 
 
-# noinspection PyTypeChecker
 class FramePutRam(LNetFrame):
-    def __init__(self, address: int, size: int, width: int, value: bytearray = []):
-        """
-        responsible for setting up the request frame for MCU to 'Set' the variable value.
+    """
+    FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
+    """
 
-        @param address: address of the variable.
-        @param size: size of the variable.
-        @param value: value to set on the defined variable in byte's
-        @param width: width according to the type of microcontroller
+    def __init__(self, address: int, size: int, width: int, value: bytearray = None):
+        """
+        initialize the FramePutRam instance.
+
+        args:
+            address (int): Address of the variable.
+            size (int): Size of the variable.
+            value (bytearray, optional): Value to set on the defined variable in bytes.
+            width (int): Width according to the type of microcontroller.
         """
         super().__init__()
-        self.width = width
+        self.value_dataType = width
         self.service_id = 10
         self.address = address
         self.size = size
-        self.user_value = value
+        self.value = bytearray() if value is None else value
 
-    def _get_data(self) -> list:
-        """
-        _get_data helps the user to get the data of the variable from the MCU
-        @return: list
-        """
-        byte_address = self.address.to_bytes(length=self.width, byteorder="little")
-        add_setup = [*byte_address]
-        return [self.service_id, *add_setup, self.size, *self.user_value]
+    def _get_data(self):
+        byte_address = self.address.to_bytes(
+            length=self.value_dataType, byteorder="little"
+        )
+        self.data.extend([self.service_id, *byte_address, self.size, *self.value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
         """
+        set all parameters manually of the frame.
 
-        @param address: self.address
-        @param size: self.size
-        @param value: self.value
+        args:
+            address (int): Address of the variable.
+            size (int): Size of the variable.
+            value (bytearray): Value to set on the defined variable in bytes.
         """
         self.address = address
         self.size = size
-        self.user_value = value
+        self.value = value
 
     def set_size(self, size: int):
         """
-        setting size of Variable for the LNET frame for getRamBlock
-        @rtype: object
-        @param size: int
+        Set the size of the variable (Bytes).
+
+        Args:
+            size (int): Size of the variable.
         """
         self.size = size
 
-    def get_size(self) -> object:
+    def get_size(self) -> int:
         """
-        @return: self.size
+        Get the size of the variable.
+
+        Returns:
+            int: Size of the variable.
         """
         return self.size
 
     def set_address(self, address: int):
+        """
+        Set manually the address of the variable.
+
+        Args:
+            address (int): Address of the variable.
+        """
         self.address = address
 
-    def get_address(self):
+    def get_address(self) -> int:
         """
-        @return: self.address
+        Get the memory address of the variable.
+
+        Returns:
+            int: Address of the variable.
         """
         return self.address
 
-    def set_user_value(self, value: int):
+    def set_user_value(self, value: bytearray):
         """
+        Set the user-defined value for the specific variable.
 
-        @param value: user defined value for the specific variable
+        Args:
+            value (bytearray): User-defined value for the specific variable.
         """
-        self.user_value = value
+        self.value = value
 
-    def get_user_value(self):
+    def get_user_value(self) -> bytearray:
         """
-        @return: self.user_value
-        """
-        return self.user_value
+        Get the user-defined value for the specific variable.
 
-    def _deserialize(self, received: bytearray) -> bytearray:
-        data_received = int(received[-2], 16)
-        if not data_received == 0:
-            return
-        logging.info("Error_id : {}".format(self.error_id(data_received)))
-        return self.error_id(data_received)
+        Returns:
+            int: User-defined value for the specific variable.
+        """
+        return self.value
+
+    def _deserialize(self):
+        """
+        Nothing to do here once there is no service data on put ram and
+        errors and service id have already being checked by the superclass
+        """

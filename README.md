@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../pyx2cscope/gui/img/microchip-technology-logo.png" alt="PyX2CScope Logo" width="250">
+  <img src="https://raw.githubusercontent.com/X2Cscope/pyx2cscope/feat-faster-monitoring/pyx2cscope/gui/img/pyx2cscope.jpg" alt="PyX2CScope Logo" width="250">
 </p>
 
 # mchplnet
@@ -27,7 +27,7 @@ l_net = mchplnet.LNet(interface))
 var_address = 0x00000000
 var_size = 4 
 var_value = l_net.get_ram(var_address, var_size) 
-print(var_value)
+logging.debug(var_value)
 ```
 5. To modify the value of a variable, use the put_ram function:
 

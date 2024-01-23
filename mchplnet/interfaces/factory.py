@@ -1,3 +1,9 @@
+"""
+File: factory.py
+Usage: Ensures the proper configuration of the communication interface supported by X2Cscope.
+"""
+
+import logging
 from enum import Enum
 
 from mchplnet.interfaces.abstract_interface import InterfaceABC
@@ -24,7 +30,6 @@ class InterfaceFactory:
                 LNetSerial,
                 {
                     "port": "Serial port name or device path",
-                    "baudrate": "Baud-rate for the serial communication",
                 },
             ),
             InterfaceType.CAN: (
@@ -46,6 +51,8 @@ class InterfaceFactory:
 
         interface_class, required_params = interfaces[interface_type]
 
+        # TODO: required params should be a task of the interface, an not of the factory
+        # if the parameter is not supplied, it should assume default values
         # Check if all required parameters are provided
         missing_params = [
             param
@@ -66,6 +73,6 @@ if __name__ == "__main__":
 
     try:
         interface = InterfaceFactory.get_interface(interface, **interface_kwargs)
-        print("Interface created:", interface)
+        logging.debug("Interface created:", interface)
     except ValueError as e:
-        print("Error creating interface:", str(e))
+        logging.debug("Error creating interface:", str(e))

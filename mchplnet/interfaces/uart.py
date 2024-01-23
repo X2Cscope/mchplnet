@@ -1,9 +1,66 @@
+import logging
+from typing import Any, List
+
 import serial
+
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetSerial(InterfaceABC):
+    """
+    A class representing a serial communication interface for the LNet framework.
+
+    This class implements the InterfaceABC interface for serial communication.
+
+    Attributes:
+        com_port (str): The serial port name.
+        baud_rate (int): The baud rate of the communication (bits per second).
+        parity (int): The parity setting for serial communication.
+        stop_bit (int): The number of stop bits.
+        data_bits (int): The number of data bits.
+        serial (serial.Serial): The serial communication object.
+
+    Methods:
+        __init__(*args, **kwargs):
+            Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
+
+        start():
+            Set up the serial communication with the provided settings.
+
+        stop():
+            Close the serial communication.
+
+        write(data):
+            Write data to the serial port.
+
+        is_open() -> bool:
+            Check if the serial port is open and operational.
+
+        read() -> list:
+            Read data from the serial port.
+
+    Raises:
+        ValueError: If the provided serial settings are invalid.
+    """
+
     def __init__(self, *args, **kwargs):
+        """
+        Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
+
+        Args:
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Keyword Args:
+            port (str, optional): Serial port name. Defaults to "COM11".
+            baud_rate (int, optional): Baud rate (bits per second). Defaults to 115200.
+            parity (int, optional): Parity setting. Defaults to 0.
+            stop_bit (int, optional): Number of stop bits. Defaults to 1.
+            data_bits (int, optional): Number of data bits. Defaults to 8.
+
+        Returns:
+            None
+        """
         self.com_port = kwargs["port"] if "port" in kwargs else "COM11"
         self.baud_rate = kwargs["baud_rate"] if "baud_rate" in kwargs else 115200
         self.parity = kwargs["parity"] if "parity" in kwargs else 0
@@ -14,21 +71,21 @@ class LNetSerial(InterfaceABC):
 
     def start(self):
         """
-        set up the serial communication with the provided settings.
+        Set up the serial communication with the provided settings.
+
+        Parity, stop bits, and data bits are converted from integer values to their respective constants.
+        Initializes the serial communication object.
 
         Args:
-            self.com_port (str): Serial port name.
-            self.baud-rate (int): Baud rate of the system (bits/sec).
-            self.parity (int): Parity setting.
-            self.stop_bits (int): Number of stop bits.
-            self.data_bits (int): Number of data bits.
+            None
 
-        returns:
-            serial.Serial: Initialized serial object for communication.
+        Returns:
+            None
 
         Raises:
-            ValueError: If the provided settings are invalid.
+            ValueError: If the provided serial settings are invalid.
         """
+        # Mapping of settings values to serial module constants
         parity_options = {
             0: serial.PARITY_NONE,
             2: serial.PARITY_EVEN,
@@ -66,34 +123,63 @@ class LNetSerial(InterfaceABC):
                 timeout=1,
             )
         except Exception as e:
-            print(e)
+            logging.debug(e)
 
     def stop(self):
-        self.serial.close()
+        """
+        Close the serial communication.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        if self.serial:
+            self.serial.close()
+        else:
+            return
 
     def write(self, data):
-        self.serial.write(data)
+        """
+        Write data to the serial port.
 
-    def is_open(self):
+        Args:
+            data: The data to be written to the serial port.
+
+        Returns:
+            None
+        """
+        if self.serial:
+            self.serial.write(data)
+        else:
+            return
+
+    def is_open(self) -> bool:
+        """
+        Check if the serial port is open and operational.
+
+        Args:
+            None
+
+        Returns:
+            bool: True if the serial port is open, False otherwise.
+        """
         return self.serial.is_open
 
     def read(self):
-        response_list = []
-        counter = 0
-        i = 0
-        read_size = 4
-        while i < read_size:
-            byte = self.serial.read().hex()  # Get in hex
-            response_list.append(byte)
-            counter += 1
-            if counter == 3:
-                read_size = int(response_list[1], 16) + read_size
-            if i == 0:
-                pass
-            elif byte == "55" or byte == "02":
-                read_size += 1
-            i += 1
-        if response_list:
-            return response_list
-        else:
-            return None
+        response_list = bytearray()
+        if self.serial:
+            counter = 0
+            read_size = 4
+            while counter < read_size:
+                byte = ord(self.serial.read())
+                response_list.append(byte)
+                counter += 1
+                if counter == 1:
+                    pass
+                elif counter == 3:
+                    read_size = response_list[1] + read_size
+                elif byte == 0x55 or byte == 0x02:
+                    read_size += 1
+        return response_list

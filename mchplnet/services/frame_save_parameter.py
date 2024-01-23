@@ -1,146 +1,61 @@
+"""
+File: frame_save_parameter.py
+Description: This framework is responsible to set up the configuration for scope functionality.
+"""
+
 import logging
-from dataclasses import dataclass
-from typing import List
 
 from mchplnet.lnetframe import LNetFrame
+from mchplnet.services.scope import ScopeSetup
 
-
-@dataclass
-class ScopeChannel:
-    name: str
-    source_type: int
-    source_location: int
-    data_type_size: int
-
-
-@dataclass
-class ScopeTrigger:
-    data_type: int
-    source_type: int
-    source_location: int
-    trigger_level: int
-    trigger_delay: int
-    trigger_edge: int
-    trigger_mode: int
-
-
-@dataclass
-class ScopeConfiguration:
-    scope_state: int
-    sample_time_factor: int
-    channels: List[ScopeChannel]
-    trigger: ScopeTrigger = None
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="Scope_save_parameter.log",
+)
 
 
 class FrameSaveParameter(LNetFrame):
+    """
+    The Save Parameter is used to configure the Scope and to start the sampling procedure for the defined variables.
+
+    attributes:
+        address: The address of the frame.
+        size: The size of the frame.
+        service_id: The service ID of the frame.
+        unique_ID: The unique ID of the frame.
+        scope_config: The scope configuration to be included in the frame.
+
+    methods:
+        __init__(): Initialize the FrameSaveParameter object.
+        _deserialize (received: bytearray) -> bytearray | None: Deserialize the frame data.
+        _get_data() -> list: Define the interface to get frame data.
+        set_scope_configuration(scope_config: ScopeConfiguration): Set the scope configuration.
+        remove_channel_by_name(channel_name: str): Remove a channel from the scope configuration by its name.
+    """
+
     def __init__(self):
+        """
+        Initialize a FrameSaveParameter object.
+
+        Initializes the address, size, service_id, unique_ID, and scope_config attributes.
+        """
         super().__init__()
         self.address = None
         self.size = None
         self.service_id = 18
-        self.unique_ID = 65535
+        self.unique_ID = 1
         self.unique_ID = self.unique_ID.to_bytes(length=2, byteorder="little")
-        self.scope_config = None
+        self.scope_setup = ScopeSetup()
 
-    def _deserialize(self, received: bytearray) -> bytearray:
-        data_received = int(received[-2], 16)
-        if not data_received == 0:
-            return
-        logging.info("Error_id : {}".format(self.error_id(data_received)))
-        return self.error_id(data_received)
+    def _deserialize(self):
+        """
+        Nothing to do here once there is no service data on save parameter and
+        errors and service id have already being checked by the superclass
+        """
 
     def _get_data(self):
-        """
-        Define interface, job of subclass to implement based on the service type
+        self.data.extend([self.service_id, *self.unique_ID])
+        self.data.extend(self.scope_setup.get_buffer())
 
-        Returns:
-            list: DATA part of the frame
-        """
-        save_params = [self.service_id, *self.unique_ID]
-
-        if self.scope_config:
-            scope_config = self.scope_config
-            save_params.append(scope_config.scope_state)
-            save_params.append(len(scope_config.channels))
-
-            save_params.append(scope_config.sample_time_factor & 0xFF)
-            save_params.append((scope_config.sample_time_factor >> 8) & 0xFF)
-
-            for channel in scope_config.channels:
-                save_params.append(channel.source_type)
-                save_params.append(channel.source_location & 0xFF)
-                save_params.append((channel.source_location >> 8) & 0xFF)
-                save_params.append((channel.source_location >> 16) & 0xFF)
-                save_params.append((channel.source_location >> 24) & 0xFF)
-                save_params.append(channel.data_type_size)
-
-            if scope_config.trigger:
-                trigger = scope_config.trigger
-                trigger_data_type = ((trigger.data_type & 0x0F) << 4) | 0x80
-                save_params.extend([trigger_data_type, trigger.source_type])
-                save_params.append(trigger.source_location & 0xFF)
-                save_params.append((trigger.source_location >> 8) & 0xFF)
-                save_params.append((trigger.source_location >> 16) & 0xFF)
-                save_params.append((trigger.source_location >> 24) & 0xFF)
-                save_params.append(trigger.trigger_level & 0xFF)
-                save_params.append((trigger.trigger_level >> 8) & 0xFF)
-                save_params.append(trigger.trigger_delay & 0xFF)
-                save_params.append((trigger.trigger_delay >> 8) & 0xFF)
-                save_params.append((trigger.trigger_delay >> 16) & 0xFF)
-                save_params.append((trigger.trigger_delay >> 24) & 0xFF)
-                save_params.append(trigger.trigger_edge)
-                save_params.append(trigger.trigger_mode)
-
-        return save_params
-
-    def set_scope_configuration(self, scope_config):
-        self.scope_config = scope_config
-
-
-if __name__ == "__main__":
-    frame = FrameSaveParameter()
-
-    # Set up scope configuration
-    scope_config = ScopeConfiguration(
-        scope_state=0x01, sample_time_factor=10, channels=[]
-    )
-
-    # Add channels to the scope configuration
-    scope_config.channels.append(
-        ScopeChannel(
-            name="Channel 1",
-            source_type=0x00,
-            source_location=0xDEADCAFE,
-            data_type_size=4,
-        )
-    )
-    scope_config.channels.append(
-        ScopeChannel(
-            name="Channel 2",
-            source_type=0x00,
-            source_location=0x8899AABB,
-            data_type_size=2,
-        )
-    )
-
-    # Set up trigger configuration
-    scope_config.trigger = ScopeTrigger(
-        data_type=4,
-        source_type=0x00,
-        source_location=0x12345678,
-        trigger_level=70000,
-        trigger_delay=600,
-        trigger_edge=0x00,
-        trigger_mode=0x01,
-    )
-
-    # Set the scope configuration in the frame
-    frame.set_scope_configuration(scope_config)
-
-    print(frame._get_data())
-
-    # Remove a channel by name
-    frame.remove_channel_by_name("Channel 2")
-
-    # Convert to bytes again after removing a channel
-    print(frame._get_data())
+    def set_scope_setup(self, scope_setup: ScopeSetup):
+        self.scope_setup = scope_setup
