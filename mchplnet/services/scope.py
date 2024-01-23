@@ -21,6 +21,7 @@ class ScopeChannel:
         is_enable (bool): Flag indicating if the channel is enabled. Default is True.
         offset (int): Offset value for the data. Default is 0.
     """
+
     name: str
     source_location: int
     data_type_size: int = 0
@@ -43,6 +44,7 @@ class ScopeTrigger:
         trigger_edge (int): Indicates the edge type for triggering (Rising Edge = 0x01, Falling Edge = 0x00).
         trigger_mode (int): The mode of triggering.
     """
+
     channel: ScopeChannel = None
     trigger_level: int = 0
     trigger_delay: int = 0

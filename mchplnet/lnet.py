@@ -1,4 +1,5 @@
 import logging
+
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
@@ -65,7 +66,9 @@ class LNet:
             RuntimeError: If the device information has not been initialized.
         """
         if self.device_info is None:
-            raise RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
+            raise RuntimeError(
+                "DeviceInfo is not initialized. Call get_device_info() first."
+            )
 
     def save_parameter(self):
         """
@@ -115,7 +118,9 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
+        get_ram_frame = FrameGetRam(
+            address, bytes_to_read, data_type, self.device_info.uc_width
+        )
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
@@ -134,7 +139,9 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
+        get_ram_frame = FrameGetRam(
+            address, data_type, data_type, self.device_info.uc_width
+        )
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
