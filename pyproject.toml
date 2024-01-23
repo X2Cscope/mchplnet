@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mchplnet"
-version = "0.0.6"
+version = "0.1.0"
 description = "python implementation of X2Cscope"
 authors = ["Yash Agarwal <yash.agarwal@microchip.com>",
   "Edras Pacola",
