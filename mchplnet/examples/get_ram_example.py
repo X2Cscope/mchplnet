@@ -1,5 +1,4 @@
-"""
-Example to configure and getting started with receiving variable Value using watchView functionality.
+"""Example to configure and getting started with receiving variable Value using watchView functionality.
 """
 
 import logging
@@ -22,9 +21,7 @@ l_net = LNet(interface)
 logging.debug(l_net.device_info.monitorDate)
 logging.debug(l_net.device_info.processor_id)
 logging.debug(l_net.device_info.uc_width)
-logging.debug(
-    f"appversion:{l_net.device_info.appVer}....... DSP state:{l_net.device_info.dsp_state}"
-)
+logging.debug(f"appversion:{l_net.device_info.appVer}....... DSP state:{l_net.device_info.dsp_state}")
 
 # Reading a specific memory address from the RAM of the microcontroller.
 # here we provide manually the address and the data type of the variable.

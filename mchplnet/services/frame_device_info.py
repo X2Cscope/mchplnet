@@ -1,5 +1,4 @@
-"""
-File: frame_device_info.py
+"""File: frame_device_info.py
 Description: This module defines a custom frame for device information retrieval and interpretation.
 
 This frame is responsible for Hand-Shake, Monitor-Version, Identifying processor Type, and Application Version.
@@ -13,6 +12,7 @@ Usage:
     - Utilize the `FrameDeviceInfo` class to deserialize received data and retrieve device information.
 
 """
+
 import logging
 from dataclasses import dataclass
 
@@ -38,14 +38,12 @@ class DeviceInfo:
 
 # noinspection PyTypeChecker
 class FrameDeviceInfo(LNetFrame):
-    """
-    Custom frame for device information retrieval and interpretation.
+    """Custom frame for device information retrieval and interpretation.
     Inherits from LNetFrame.
     """
 
     def __init__(self):
-        """
-        Initialize the FrameDeviceInfo class.
+        """Initialize the FrameDeviceInfo class.
         """
         super().__init__()
         self.service_id = 0
@@ -54,8 +52,7 @@ class FrameDeviceInfo(LNetFrame):
         self.data.append(self.service_id)
 
     def _get_processor_id(self):
-        """
-        Maps the microcontroller ID to the corresponding value.
+        """Maps the microcontroller ID to the corresponding value.
 
         Returns:
             int: Microcontroller width (2 for 16-bit uc or 4 for 32-bit uc) or None if not in the list of uc defined.
@@ -99,7 +96,7 @@ class FrameDeviceInfo(LNetFrame):
             DeviceInfo.processor_id = processor_ids_32_bit.get(hex_value)
             return 4
         else:
-            logging.error(f"Processor is: Unknown")
+            logging.error("Processor is: Unknown")
             return None
 
     def _deserialize(self):
@@ -118,8 +115,7 @@ class FrameDeviceInfo(LNetFrame):
         return DeviceInfo
 
     def _app_ver(self):
-        """
-        Get the application version.
+        """Get the application version.
 
         Returns:
             int: The application version data.
@@ -127,8 +123,7 @@ class FrameDeviceInfo(LNetFrame):
         return int.from_bytes(self.received[7:9], byteorder="little")
 
     def _monitor_ver(self):
-        """
-        Get the monitor version.
+        """Get the monitor version.
 
         Returns:
             int: The monitor version data.
@@ -136,8 +131,7 @@ class FrameDeviceInfo(LNetFrame):
         return int.from_bytes(self.received[5:7], byteorder="little")
 
     def _monitor_date(self):
-        """
-        Extract and convert monitor date and time from the received data.
+        """Extract and convert monitor date and time from the received data.
 
         Returns:
             str: Monitor date and time as a string.
@@ -145,8 +139,7 @@ class FrameDeviceInfo(LNetFrame):
         return "".join([chr(val) for val in self.received[12:21]])
 
     def _monitor_time(self):
-        """
-        Extract and convert monitor date and time from the received data.
+        """Extract and convert monitor date and time from the received data.
 
         Returns:
             str: Monitor date and time as a string.
@@ -154,8 +147,7 @@ class FrameDeviceInfo(LNetFrame):
         return "".join([chr(val) for val in self.received[21:25]])
 
     def _app_date(self):
-        """
-        Extract and convert monitor date from the received data.
+        """Extract and convert monitor date from the received data.
 
         Returns:
             str: Monitor date as a string.
@@ -163,8 +155,7 @@ class FrameDeviceInfo(LNetFrame):
         return "".join([chr(val) for val in self.received[25:34]])
 
     def _app_time(self):
-        """
-        Extract and convert monitor time from the received data.
+        """Extract and convert monitor time from the received data.
 
         Returns:
             str: Monitor time as a string.
@@ -172,8 +163,7 @@ class FrameDeviceInfo(LNetFrame):
         return "".join([chr(val) for val in self.received[34:38]])
 
     def _dsp_state(self):
-        """
-        The DSP state indicates the current state of X2C.
+        """The DSP state indicates the current state of X2C.
 
         Returns:
             "MONITOR - Monitor runs on target but no application".
@@ -194,8 +184,7 @@ class FrameDeviceInfo(LNetFrame):
         return dsp_state.get(self.received[38], "Unknown DSP State")
 
     def _event_type(self):
-        """
-        Get the monitor version.
+        """Get the monitor version.
 
         Returns:
             int: The monitor version.
@@ -203,8 +192,7 @@ class FrameDeviceInfo(LNetFrame):
         return int.from_bytes(self.received[39:41], byteorder="little")
 
     def _event_id(self):
-        """
-        Get the monitor version.
+        """Get the monitor version.
 
         Returns:
             int: The monitor version data.
@@ -212,8 +200,7 @@ class FrameDeviceInfo(LNetFrame):
         return int.from_bytes(self.received[41:45], byteorder="little")
 
     def _table_struct_add(self):
-        """
-        Get the table structure add.
+        """Get the table structure add.
 
         Returns:
             int: The table structure add.

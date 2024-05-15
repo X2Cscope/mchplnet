@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 
 
 class LNetFrame(ABC):
-    """
-    LNetFrame is an abstract base class that implements the structure of LNet frames.
+    """LNetFrame is an abstract base class that implements the structure of LNet frames.
 
     LNet frames consist of several parts, including SYN, SIZE, NODE, DATA, and CRC.
     the SYN byte indicates the start of a frame and is always 0x55.
@@ -15,7 +14,7 @@ class LNetFrame(ABC):
     the DATA area contains the frame's data, and the CRC byte is
     used for error checking.
 
-    attributes:
+    Attributes:
         received (bytearray): The received frame data.
         service_id (int): The Service ID identifying the type of service.
         __syn (int): The SYN byte value (always 0x55).
@@ -23,7 +22,7 @@ class LNetFrame(ABC):
         data (list): The data part of the frame.
         crc (int): The calculated CRC value for the frame.
 
-    methods:
+    Methods:
         _get_data(self) -> list:
             Abstract method to be implemented by subclasses.
             returns the data part of the frame.
@@ -61,8 +60,7 @@ class LNetFrame(ABC):
     """
 
     def __init__(self):
-        """
-        Initialize an LNetFrame instance.
+        """Initialize an LNetFrame instance.
         """
         self.received = None
         self.service_id = None
@@ -73,8 +71,7 @@ class LNetFrame(ABC):
 
     @abstractmethod
     def _get_data(self):
-        """
-        Append service payload to the member class self.data.
+        """Append service payload to the member class self.data.
 
         This method is called by LNetFrame serialize method retrieving specific information from the subclass
         specialization. When this method is called, self.data is empty and the service needs to append its own
@@ -83,8 +80,7 @@ class LNetFrame(ABC):
         pass
 
     def serialize(self):
-        """
-        Serialize the frame by setting up SYN, SIZE, NODE, DATA, and CRC bytes.
+        """Serialize the frame by setting up SYN, SIZE, NODE, DATA, and CRC bytes.
 
         Returns:
             bytearray: Serialized frame.
@@ -98,8 +94,7 @@ class LNetFrame(ABC):
         return bytearray(self.data)
 
     def _crc_checksum(self, list_crc):
-        """
-        Calculate a checksum from the contents of a list.
+        """Calculate a checksum from the contents of a list.
 
         Args:
             list_crc (list): List of integers to calculate the CRC from.
@@ -122,15 +117,12 @@ class LNetFrame(ABC):
 
         self.crc = crc_calculation  # Add the hex checksum to the list of the data
 
-        logging.debug(
-            "Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc)
-        )
+        logging.debug("Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc))
 
         return self.crc
 
     def _add_fill_byte(self):
-        """
-        Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
+        """Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
 
         If any of these key values occur within SIZE, NODE, or DATA area, a 0x00 'fill_bytes'
         will be added, which will not be counted as data size and not be used in checksum calculation.
@@ -142,25 +134,19 @@ class LNetFrame(ABC):
             i += 1
 
     def frame_integrity(self) -> bool:
-        """
-        Check the integrity of the received frame by verifying the CRC.
+        """Check the integrity of the received frame by verifying the CRC.
 
         Returns:
             bool: True if the frame integrity check passes, False otherwise.
         """
         if self._crc_checksum(self.received[:-1]) != self.received[-1]:
-            logging.error(
-                "CRC Checksum doesn't match: {}".format(
-                    self._crc_checksum(self.received)
-                )
-            )
+            logging.error("CRC Checksum doesn't match: {}".format(self._crc_checksum(self.received)))
             return False
         return True
 
     @abstractmethod
     def _deserialize(self):
-        """
-        Deserialize the frame data stored on class member 'received'.
+        """Deserialize the frame data stored on class member 'received'.
 
         Returns: None or object: Deserialize frame for the respected service ID and provide required Data or None if
         there are errors.
@@ -168,8 +154,7 @@ class LNetFrame(ABC):
         pass
 
     def _check_frame_protocol(self):
-        """
-        Check the Service ID and error status in the received frame.
+        """Check the Service ID and error status in the received frame.
 
         Returns:
             bool: True if the Service ID and error status are valid, False otherwise.
@@ -178,8 +163,7 @@ class LNetFrame(ABC):
         return self.received[3] == self.service_id and self.received[4] == 0
 
     def _remove_fill_byte(self):
-        """
-        Remove fill bytes (0x00) from the received frame.
+        """Remove fill bytes (0x00) from the received frame.
         """
         z = 1
         while z < len(self.received):
@@ -188,8 +172,7 @@ class LNetFrame(ABC):
             z += 1
 
     def deserialize(self):
-        """
-        Save the parameters and check for errors in the response frame.
+        """Save the parameters and check for errors in the response frame.
 
         Returns:
             None or object: Deserialized frame or None if there are errors.
@@ -202,8 +185,7 @@ class LNetFrame(ABC):
 
     @staticmethod
     def get_error_id(error_id: int):
-        """
-        Get the error description based on the error ID.
+        """Get the error description based on the error ID.
 
         Args:
             error_id (int): Error ID.
