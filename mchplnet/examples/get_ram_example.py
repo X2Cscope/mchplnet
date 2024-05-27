@@ -1,5 +1,4 @@
-"""Example to configure and getting started with receiving variable Value using watchView functionality.
-"""
+"""Example to configure and getting started with receiving variable Value using watchView functionality."""
 
 import logging
 
