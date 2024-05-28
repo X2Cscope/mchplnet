@@ -1,4 +1,5 @@
-"""File: factory.py
+"""Factory interface implementation.
+
 Usage: Ensures the proper configuration of the communication interface supported by X2Cscope.
 """
 
@@ -64,6 +65,6 @@ if __name__ == "__main__":
 
     try:
         interface = InterfaceFactory.get_interface(interface, **interface_kwargs)
-        logging.debug("Interface created:", interface)
+        logging.debug("Interface created: %s", interface)
     except ValueError as e:
-        logging.debug("Error creating interface:", str(e))
+        logging.debug("Error creating interface: %s", str(e))

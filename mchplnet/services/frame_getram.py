@@ -1,7 +1,4 @@
-"""File: frame_getram.py
-
-Usage: FrameGetRam Reads values from target memory address.
-"""
+"""Implements the FrameGetRam functionality to read values from target memory address."""
 
 from mchplnet.lnetframe import LNetFrame
 

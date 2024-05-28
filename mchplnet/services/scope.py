@@ -1,5 +1,4 @@
-"""Scope classes needed to implement scope functionality being called under frame_save_parameter
-"""
+"""Scope classes needed to implement scope functionality being called under frame_save_parameter."""
 
 from dataclasses import dataclass
 from typing import Dict
@@ -70,7 +69,7 @@ class ScopeSetup:
         self.scope_trigger = ScopeTrigger()
 
     def set_sample_time_factor(self, sample_time_factor: int = 1):
-        """Set the sample time factor for the scope. Default is 1
+        """Set the sample time factor for the scope. Default is 1.
 
         Args:
             sample_time_factor (int): The sample time factor to be set.
@@ -141,8 +140,7 @@ class ScopeSetup:
         return self.channels
 
     def reset_trigger(self):
-        """Reset the trigger configuration to default.
-        """
+        """Reset the trigger configuration to default."""
         self.scope_state = 2
         self.scope_trigger = ScopeTrigger()
 

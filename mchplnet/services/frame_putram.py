@@ -90,6 +90,8 @@ class FramePutRam(LNetFrame):
         return self.value
 
     def _deserialize(self):
-        """Nothing to do here once there is no service data on put ram and
+        """Deserialization of received bytes.
+
+        Nothing to do here once there is no service data on put ram and
         errors and service id have already being checked by the superclass
         """

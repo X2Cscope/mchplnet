@@ -1,6 +1,4 @@
-"""File: frame_save_parameter.py
-Description: This framework is responsible to set up the configuration for scope functionality.
-"""
+"""This framework is responsible to set up the configuration for scope functionality."""
 
 import logging
 
@@ -45,7 +43,9 @@ class FrameSaveParameter(LNetFrame):
         self.scope_setup = ScopeSetup()
 
     def _deserialize(self):
-        """Nothing to do here once there is no service data on save parameter and
+        """Deserialization of bytes received from device.
+
+        Nothing to do here once there is no service data on save parameter and
         errors and service id have already being checked by the superclass
         """
 

@@ -15,13 +15,14 @@ Usage:
 
 import logging
 from dataclasses import dataclass
+from typing import ClassVar
 
 from mchplnet.lnetframe import LNetFrame
 
 
 @dataclass
 class DeviceInfo:
-    monitorVer: int = 0
+    monitor_version: int = 0
     appVer: int = 0
     maxTargetSize = 0
     processor_id: int = 0
@@ -34,6 +35,8 @@ class DeviceInfo:
     eventType: int = 0
     eventID: int = 0
     tableStructAdd: int = 0
+    MACHINE_16: ClassVar[int] = 2
+    MACHINE_32: ClassVar[int] = 4
 
 
 # noinspection PyTypeChecker
@@ -101,7 +104,7 @@ class FrameDeviceInfo(LNetFrame):
 
     def _deserialize(self):
         DeviceInfo.appVer = self._app_ver()
-        DeviceInfo.monitorVer = self._monitor_ver()
+        DeviceInfo.monitor_version = self._monitor_ver()
         DeviceInfo.uc_width = self._get_processor_id()
         DeviceInfo.monitorDate = self._monitor_date()
         DeviceInfo.monitorTime = self._monitor_time()
