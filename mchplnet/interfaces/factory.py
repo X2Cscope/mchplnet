@@ -1,5 +1,5 @@
-"""
-File: factory.py
+"""Factory interface implementation.
+
 Usage: Ensures the proper configuration of the communication interface supported by X2Cscope.
 """
 
@@ -22,9 +22,7 @@ class InterfaceType(Enum):
 
 class InterfaceFactory:
     @staticmethod
-    def get_interface(
-        interface_type: InterfaceType, *args: object, **kwargs: object
-    ) -> InterfaceABC:
+    def get_interface(interface_type: InterfaceType, *args: object, **kwargs: object) -> InterfaceABC:
         interfaces = {
             InterfaceType.SERIAL: (
                 LNetSerial,
@@ -54,15 +52,9 @@ class InterfaceFactory:
         # TODO: required params should be a task of the interface, an not of the factory
         # if the parameter is not supplied, it should assume default values
         # Check if all required parameters are provided
-        missing_params = [
-            param
-            for param, description in required_params.items()
-            if param not in kwargs
-        ]
+        missing_params = [param for param, description in required_params.items() if param not in kwargs]
         if missing_params:
-            raise ValueError(
-                f"Missing required parameters for {interface_type.name}: {', '.join(missing_params)}"
-            )
+            raise ValueError(f"Missing required parameters for {interface_type.name}: {', '.join(missing_params)}")
 
         return interface_class(*args, **kwargs)
 
@@ -73,6 +65,6 @@ if __name__ == "__main__":
 
     try:
         interface = InterfaceFactory.get_interface(interface, **interface_kwargs)
-        logging.debug("Interface created:", interface)
+        logging.debug("Interface created: %s", interface)
     except ValueError as e:
-        logging.debug("Error creating interface:", str(e))
+        logging.debug("Error creating interface: %s", str(e))

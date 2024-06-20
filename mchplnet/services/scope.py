@@ -1,6 +1,4 @@
-"""
-Scope classes needed to implement scope functionality being called under frame_save_parameter
-"""
+"""Scope classes needed to implement scope functionality being called under frame_save_parameter."""
 
 from dataclasses import dataclass
 from typing import Dict
@@ -8,8 +6,7 @@ from typing import Dict
 
 @dataclass
 class ScopeChannel:
-    """
-    Represents a scope channel configuration.
+    """Represents a scope channel configuration.
 
     Attributes:
         name (str): The name of the channel.
@@ -34,8 +31,7 @@ class ScopeChannel:
 
 @dataclass
 class ScopeTrigger:
-    """
-    Scope trigger configuration.
+    """Scope trigger configuration.
 
     Attributes:
         channel (ScopeChannel): The channel to use as a trigger source.
@@ -53,8 +49,7 @@ class ScopeTrigger:
 
 
 class ScopeSetup:
-    """
-    Represents a scope configuration setup.
+    """Represents a scope configuration setup.
 
     This class handles the configuration of the scope including channels, trigger settings,
     and managing the data buffer.
@@ -74,8 +69,7 @@ class ScopeSetup:
         self.scope_trigger = ScopeTrigger()
 
     def set_sample_time_factor(self, sample_time_factor: int = 1):
-        """
-        Set the sample time factor for the scope. Default is 1
+        """Set the sample time factor for the scope. Default is 1.
 
         Args:
             sample_time_factor (int): The sample time factor to be set.
@@ -83,8 +77,7 @@ class ScopeSetup:
         self.sample_time_factor = sample_time_factor
 
     def set_scope_state(self, scope_state: int = 1):
-        """
-        Set the scope state manually. 2 for Auto mode without Trigger, 1 for Normal mode with Trigger.
+        """Set the scope state manually. 2 for Auto mode without Trigger, 1 for Normal mode with Trigger.
 
         Args:
             scope_state (int): The state to be set for the scope.
@@ -92,8 +85,7 @@ class ScopeSetup:
         self.scope_state = scope_state
 
     def add_channel(self, channel: ScopeChannel, trigger: bool = False) -> int:
-        """
-        Add a new channel to the scope configuration.
+        """Add a new channel to the scope configuration.
 
         Args:
             channel (ScopeChannel): The channel to be added.
@@ -112,8 +104,7 @@ class ScopeSetup:
         return len(self.channels)
 
     def remove_channel(self, channel_name: str) -> int:
-        """
-        Remove a channel from the scope configuration.
+        """Remove a channel from the scope configuration.
 
         Args:
             channel_name (str): The name of the channel to be removed.
@@ -128,8 +119,7 @@ class ScopeSetup:
         return len(self.channels)
 
     def get_channel(self, channel_name: str):
-        """
-        Get a channel by its name.
+        """Get a channel by its name.
 
         Args:
             channel_name (str): The name of the channel to retrieve.
@@ -142,8 +132,7 @@ class ScopeSetup:
         return None
 
     def list_channels(self) -> Dict[str, ScopeChannel]:
-        """
-        List all channels in the scope configuration.
+        """List all channels in the scope configuration.
 
         Returns:
             Dict[str, ScopeChannel]: A dictionary of all channels.
@@ -151,15 +140,12 @@ class ScopeSetup:
         return self.channels
 
     def reset_trigger(self):
-        """
-        Reset the trigger configuration to default.
-        """
+        """Reset the trigger configuration to default."""
         self.scope_state = 2
         self.scope_trigger = ScopeTrigger()
 
     def set_trigger(self, scope_trigger: ScopeTrigger):
-        """
-        Set a custom trigger configuration.
+        """Set a custom trigger configuration.
 
         Args:
             scope_trigger (ScopeTrigger): The custom trigger configuration to be set.
@@ -168,8 +154,7 @@ class ScopeSetup:
         self.scope_trigger = scope_trigger
 
     def _trigger_level_to_bytes(self):
-        """
-        Convert user defined trigger level to a byte array.
+        """Convert user defined trigger level to a byte array.
 
         Returns:
             bytearray: The trigger level in byte format.
@@ -187,8 +172,7 @@ class ScopeSetup:
         )
 
     def get_dataset_size(self):
-        """
-        Calculate the size of the complete dataset from all channels.
+        """Calculate the size of the complete dataset from all channels.
 
         Returns:
             int: The total size of the dataset.
@@ -196,8 +180,7 @@ class ScopeSetup:
         return sum(channel.data_type_size for channel in self.channels.values())
 
     def _trigger_delay_to_bytes(self):
-        """
-        Convert user defined trigger delay to a byte array.
+        """Convert user defined trigger delay to a byte array.
 
         Returns:
             bytearray: The trigger delay in byte format.
@@ -206,8 +189,7 @@ class ScopeSetup:
         return sample_number.to_bytes(length=4, byteorder="little", signed=True)
 
     def get_buffer(self):
-        """
-        Get the buffer containing the current scope configuration.
+        """Get the buffer containing the current scope configuration.
 
         Returns:
             List[int]: A list consist of the scope configuration buffer.
@@ -235,8 +217,7 @@ class ScopeSetup:
         return buffer
 
     def _get_scope_trigger_buffer(self):
-        """
-        Get the buffer for the scope trigger configuration.
+        """Get the buffer for the scope trigger configuration.
 
         Returns:
             List[int]: A list consist of the scope trigger configuration buffer.
@@ -255,14 +236,11 @@ class ScopeSetup:
 
         buffer.extend(self._trigger_level_to_bytes())
         buffer.extend(self._trigger_delay_to_bytes())
-        buffer.extend(
-            [self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode]
-        )
+        buffer.extend([self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode])
         return buffer
 
     def _get_trigger_data_type(self):
-        """
-        Get the data type for the scope trigger.
+        """Get the data type for the scope trigger.
 
         Returns:
             int: The trigger data type.

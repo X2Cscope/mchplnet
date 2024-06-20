@@ -1,5 +1,4 @@
-"""
-File: frame_putram.py
+"""File: frame_putram.py
 Description: This module writes user defined values to target memory address.
 """
 
@@ -7,15 +6,13 @@ from mchplnet.lnetframe import LNetFrame
 
 
 class FramePutRam(LNetFrame):
-    """
-    FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
+    """FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
     """
 
     def __init__(self, address: int, size: int, width: int, value: bytearray = None):
-        """
-        initialize the FramePutRam instance.
+        """Initialize the FramePutRam instance.
 
-        args:
+        Args:
             address (int): Address of the variable.
             size (int): Size of the variable.
             value (bytearray, optional): Value to set on the defined variable in bytes.
@@ -29,16 +26,13 @@ class FramePutRam(LNetFrame):
         self.value = bytearray() if value is None else value
 
     def _get_data(self):
-        byte_address = self.address.to_bytes(
-            length=self.value_dataType, byteorder="little"
-        )
+        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
         self.data.extend([self.service_id, *byte_address, self.size, *self.value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:
-        """
-        set all parameters manually of the frame.
+        """Set all parameters manually of the frame.
 
-        args:
+        Args:
             address (int): Address of the variable.
             size (int): Size of the variable.
             value (bytearray): Value to set on the defined variable in bytes.
@@ -48,8 +42,7 @@ class FramePutRam(LNetFrame):
         self.value = value
 
     def set_size(self, size: int):
-        """
-        Set the size of the variable (Bytes).
+        """Set the size of the variable (Bytes).
 
         Args:
             size (int): Size of the variable.
@@ -57,8 +50,7 @@ class FramePutRam(LNetFrame):
         self.size = size
 
     def get_size(self) -> int:
-        """
-        Get the size of the variable.
+        """Get the size of the variable.
 
         Returns:
             int: Size of the variable.
@@ -66,8 +58,7 @@ class FramePutRam(LNetFrame):
         return self.size
 
     def set_address(self, address: int):
-        """
-        Set manually the address of the variable.
+        """Set manually the address of the variable.
 
         Args:
             address (int): Address of the variable.
@@ -75,8 +66,7 @@ class FramePutRam(LNetFrame):
         self.address = address
 
     def get_address(self) -> int:
-        """
-        Get the memory address of the variable.
+        """Get the memory address of the variable.
 
         Returns:
             int: Address of the variable.
@@ -84,8 +74,7 @@ class FramePutRam(LNetFrame):
         return self.address
 
     def set_user_value(self, value: bytearray):
-        """
-        Set the user-defined value for the specific variable.
+        """Set the user-defined value for the specific variable.
 
         Args:
             value (bytearray): User-defined value for the specific variable.
@@ -93,8 +82,7 @@ class FramePutRam(LNetFrame):
         self.value = value
 
     def get_user_value(self) -> bytearray:
-        """
-        Get the user-defined value for the specific variable.
+        """Get the user-defined value for the specific variable.
 
         Returns:
             int: User-defined value for the specific variable.
@@ -102,7 +90,8 @@ class FramePutRam(LNetFrame):
         return self.value
 
     def _deserialize(self):
-        """
+        """Deserialization of received bytes.
+
         Nothing to do here once there is no service data on put ram and
         errors and service id have already being checked by the superclass
         """

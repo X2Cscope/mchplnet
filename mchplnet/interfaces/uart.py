@@ -1,5 +1,4 @@
 import logging
-from typing import Any, List
 
 import serial
 
@@ -7,8 +6,7 @@ from mchplnet.interfaces.abstract_interface import InterfaceABC
 
 
 class LNetSerial(InterfaceABC):
-    """
-    A class representing a serial communication interface for the LNet framework.
+    """A class representing a serial communication interface for the LNet framework.
 
     This class implements the InterfaceABC interface for serial communication.
 
@@ -44,8 +42,7 @@ class LNetSerial(InterfaceABC):
     """
 
     def __init__(self, *args, **kwargs):
-        """
-        Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
+        """Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         Args:
             *args: Variable-length argument list.
@@ -70,8 +67,7 @@ class LNetSerial(InterfaceABC):
         self.start()
 
     def start(self):
-        """
-        Set up the serial communication with the provided settings.
+        """Set up the serial communication with the provided settings.
 
         Parity, stop bits, and data bits are converted from integer values to their respective constants.
         Initializes the serial communication object.
@@ -126,8 +122,7 @@ class LNetSerial(InterfaceABC):
             logging.debug(e)
 
     def stop(self):
-        """
-        Close the serial communication.
+        """Close the serial communication.
 
         Args:
             None
@@ -141,8 +136,7 @@ class LNetSerial(InterfaceABC):
             return
 
     def write(self, data):
-        """
-        Write data to the serial port.
+        """Write data to the serial port.
 
         Args:
             data: The data to be written to the serial port.
@@ -156,8 +150,7 @@ class LNetSerial(InterfaceABC):
             return
 
     def is_open(self) -> bool:
-        """
-        Check if the serial port is open and operational.
+        """Check if the serial port is open and operational.
 
         Args:
             None

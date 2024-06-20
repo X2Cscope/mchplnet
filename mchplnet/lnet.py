@@ -9,16 +9,14 @@ from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetu
 
 
 class LNet:
-    """
-    LNet is a class that handles communication with a microcontroller.
+    """LNet is a class that handles communication with a microcontroller.
 
     This class facilitates interface handshake, retrieving device information, saving and loading scope parameters,
     and reading/writing data to the microcontroller's RAM.
     """
 
     def __init__(self, interface: InterfaceABC, handshake: bool = True):
-        """
-        Initialize the LNet instance.
+        """Initialize the LNet instance.
 
         Args:
             interface (InterfaceABC): The interface for communication with the microcontroller.
@@ -32,8 +30,7 @@ class LNet:
             self._handshake()
 
     def _handshake(self):
-        """
-        Perform an interface handshake and retrieve device information.
+        """Perform an interface handshake and retrieve device information.
 
         Raises:
             RuntimeError: If unable to retrieve device information successfully.
@@ -46,8 +43,7 @@ class LNet:
             raise RuntimeError("Failed to retrieve device information.")
 
     def get_device_info(self) -> DeviceInfo:
-        """
-        Retrieve and return the device information.
+        """Retrieve and return the device information.
 
         Returns:
             DeviceInfo: The device information retrieved from the microcontroller.
@@ -59,20 +55,16 @@ class LNet:
         return self.device_info
 
     def _check_device_info(self):
-        """
-        Check if the device information is initialized.
+        """Check if the device information is initialized.
 
         Raises:
             RuntimeError: If the device information has not been initialized.
         """
         if self.device_info is None:
-            raise RuntimeError(
-                "DeviceInfo is not initialized. Call get_device_info() first."
-            )
+            raise RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
 
     def save_parameter(self):
-        """
-        Save the current scope configuration parameters to the microcontroller.
+        """Save the current scope configuration parameters to the microcontroller.
 
         Returns:
             The response from the microcontroller.
@@ -87,8 +79,7 @@ class LNet:
         return frame_save_param.deserialize()
 
     def load_parameters(self) -> LoadScopeData:
-        """
-        Load and return the scope parameters from the microcontroller.
+        """Load and return the scope parameters from the microcontroller.
 
         Returns:
             LoadScopeData: The loaded scope parameters.
@@ -103,8 +94,7 @@ class LNet:
         return self.scope_data
 
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
-        """
-        Read an array of data from the microcontroller's RAM.
+        """Read an array of data from the microcontroller's RAM.
 
         Args:
             address (int): The starting address in RAM to read data from.
@@ -118,15 +108,12 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(
-            address, bytes_to_read, data_type, self.device_info.uc_width
-        )
+        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
     def get_ram(self, address: int, data_type: int) -> bytearray:
-        """
-        Read data from the microcontroller's RAM.
+        """Read data from the microcontroller's RAM.
 
         Args:
             address (int): The address to read data from in the microcontroller's RAM.
@@ -139,15 +126,12 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(
-            address, data_type, data_type, self.device_info.uc_width
-        )
+        get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
     def put_ram(self, address: int, size: int, value: bytearray):
-        """
-        Write data to the microcontroller's RAM.
+        """Write data to the microcontroller's RAM.
 
         Args:
             address (int): The address in the microcontroller's RAM to write data to.
@@ -166,8 +150,7 @@ class LNet:
         return put_ram_frame.deserialize()
 
     def _read_data(self, frame):
-        """
-        Send a frame to the microcontroller and read the response.
+        """Send a frame to the microcontroller and read the response.
 
         Args:
             frame: The frame data to be sent.
@@ -179,8 +162,7 @@ class LNet:
         return self.interface.read()
 
     def get_scope_setup(self) -> ScopeSetup:
-        """
-        Get the current scope setup.
+        """Get the current scope setup.
 
         Returns:
             ScopeSetup: The current scope setup instance.
