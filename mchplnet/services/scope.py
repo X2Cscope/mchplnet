@@ -111,17 +111,21 @@ class ScopeSetup:
             self.scope_trigger.channel = channel
         return len(self.channels)
 
-    def remove_channel(self, channel_name: str):
+    def remove_channel(self, channel_name: str) -> int:
         """
         Remove a channel from the scope configuration.
 
         Args:
             channel_name (str): The name of the channel to be removed.
+
+        Returns:
+            int: the total number of channels after removal
         """
         if channel_name in self.channels:
             self.channels.pop(channel_name)
-            if self.scope_trigger.channel.name == channel_name:
+            if self.scope_trigger.channel and self.scope_trigger.channel.name == channel_name:
                 self.reset_trigger()
+        return len(self.channels)
 
     def get_channel(self, channel_name: str):
         """
