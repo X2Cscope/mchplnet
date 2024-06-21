@@ -1,15 +1,7 @@
 """This framework is responsible to set up the configuration for scope functionality."""
 
-import logging
-
 from mchplnet.lnetframe import LNetFrame
 from mchplnet.services.scope import ScopeSetup
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename="Scope_save_parameter.log",
-)
-
 
 class FrameSaveParameter(LNetFrame):
     """The Save Parameter is used to configure the Scope and to start the sampling procedure for the defined variables.
