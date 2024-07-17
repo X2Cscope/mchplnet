@@ -91,6 +91,7 @@ class FrameDeviceInfo(LNetFrame):
             "0x0251": "__PIC32MX170F256__",
         }
 
+
         if hex_value in processor_ids_16_bit:
             logging.info(f"Processor is: {processor_ids_16_bit.get(hex_value)} :16-bit")
             DeviceInfo.processor_id = processor_ids_16_bit.get(hex_value)

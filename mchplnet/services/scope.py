@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from typing import Dict
-
+import struct
 
 @dataclass
 class ScopeChannel:
@@ -42,7 +42,7 @@ class ScopeTrigger:
     """
 
     channel: ScopeChannel = None
-    trigger_level: int = 0
+    trigger_level: float = 0
     trigger_delay: int = 0
     trigger_edge: int = 1
     trigger_mode: int = 0
@@ -153,23 +153,27 @@ class ScopeSetup:
         self.scope_state = 1
         self.scope_trigger = scope_trigger
 
+
+
     def _trigger_level_to_bytes(self):
         """Convert user defined trigger level to a byte array.
 
         Returns:
             bytearray: The trigger level in byte format.
         """
-        return (
-            (
-                self.scope_trigger.trigger_level.to_bytes(
+        if self.scope_trigger.channel:
+            if isinstance(self.scope_trigger.trigger_level, float):
+                # Convert float to bytes using struct
+                return struct.pack('<f', self.scope_trigger.trigger_level)
+            else:
+                # Assume it is an integer and use to_bytes
+                return self.scope_trigger.trigger_level.to_bytes(
                     self.scope_trigger.channel.data_type_size,
                     byteorder="little",
                     signed=True,
                 )
-            )
-            if self.scope_trigger.channel
-            else bytes(2)
-        )
+        else:
+            return bytes(2)
 
     def get_dataset_size(self):
         """Calculate the size of the complete dataset from all channels.
