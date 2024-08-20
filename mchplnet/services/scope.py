@@ -181,8 +181,7 @@ class ScopeSetup:
         Returns:
             int: The total size of the dataset.
         """
-        sum_channel = sum(channel.data_type_size for channel in self.channels.values())
-        return sum_channel
+        return sum(channel.data_type_size for channel in self.channels.values())
 
     def _trigger_delay_to_bytes(self):
         """Convert user defined trigger delay to a byte array.
