@@ -76,7 +76,7 @@ class ScopeSetup:
         """
         self.sample_time_factor = sample_time_factor
 
-    def set_scope_state(self, scope_state: int = 1):
+    def set_scope_state(self, scope_state: int = 2):
         """Set the scope state manually. 2 for Auto mode without Trigger, 1 for Normal mode with Trigger.
 
         Args:
@@ -181,7 +181,8 @@ class ScopeSetup:
         Returns:
             int: The total size of the dataset.
         """
-        return sum(channel.data_type_size for channel in self.channels.values())
+        sum_channel = sum(channel.data_type_size for channel in self.channels.values())
+        return sum_channel
 
     def _trigger_delay_to_bytes(self):
         """Convert user defined trigger delay to a byte array.
