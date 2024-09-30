@@ -83,7 +83,7 @@ class FrameDeviceInfo(LNetFrame):
         }
 
         processor_ids_32_bit = {
-            "0x8210": "__GENERIC_MICROCHIP_DSPIC__", # TODO get it for A-core different name.
+            "0x8240": "X2C_GENERIC_MICROCHIP_DSPIC33A",
             "0x8220": "__GENERIC_MICROCHIP_PIC32__",
             "0x8320": "__GENERIC_ARM_ARMV6__",
             "0x8310": "__GENERIC_ARM_ARMV7__",
