@@ -6,6 +6,7 @@ from mchplnet.services.frame_getram import FrameGetRam
 from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
 from mchplnet.services.frame_putram import FramePutRam
 from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
+from mchplnet.services.frame_reboot import FrameReboot
 
 
 class LNet:
@@ -53,6 +54,20 @@ class LNet:
             device_info_frame.received = self._read_data(device_info_frame.serialize())
             self.device_info = device_info_frame.deserialize()
         return self.device_info
+
+
+
+    def reboot_device(self):
+        """Retrieve and return the device information.
+
+        Returns:
+            DeviceInfo: The device information retrieved from the microcontroller.
+        """
+        self._check_device_info()
+        reboot_device = FrameReboot()
+        print(reboot_device.serialize())
+        reboot_device.received = self._read_data(reboot_device.serialize())
+        return reboot_device.received
 
     def _check_device_info(self):
         """Check if the device information is initialized.
