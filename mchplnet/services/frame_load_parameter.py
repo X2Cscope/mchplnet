@@ -1,5 +1,4 @@
-"""
-File: frame_loadLoadParameter.py
+"""File: frame_loadLoadParameter.py
 Usage: FrameLoadParameter is responsible for loading parameters, which are used to get the Scope Data Array address
 and maximum size for once, as well as to check the current scope state.
 """
@@ -11,10 +10,9 @@ from mchplnet.lnetframe import LNetFrame
 
 @dataclass
 class LoadScopeData:
-    """
-    dataclass representing the loaded scope data.
+    """dataclass representing the loaded scope data.
 
-    attributes:
+    Attributes:
         scope_state (int): Value = zero if the scope is idle, and > zero if the scope is busy.
         num_channels (int): The number of active channels, max eight channels.
         sample_time_factor (int): Zero means to sample data at every Update function call.
@@ -44,13 +42,11 @@ class LoadScopeData:
 
 
 class FrameLoadParameter(LNetFrame):
-    """
-    Class responsible for loading parameters using the LNet protocol.
+    """Class responsible for loading parameters using the LNet protocol.
     """
 
     def __init__(self):
-        """
-        Initialize the FrameLoadParameter instance.
+        """Initialize the FrameLoadParameter instance.
         """
         super().__init__()
         self.address = None
@@ -86,7 +82,5 @@ class FrameLoadParameter(LNetFrame):
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):
-        self.unique_parameter = self.unique_parameter.to_bytes(
-            length=2, byteorder="little"
-        )
+        self.unique_parameter = self.unique_parameter.to_bytes(length=2, byteorder="little")
         self.data.extend([self.service_id, *self.unique_parameter])

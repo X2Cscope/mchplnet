@@ -1,24 +1,18 @@
-"""
-File: frame_getram.py
-
-Usage: FrameGetRam Reads values from target memory address.
-"""
+"""Implements the FrameGetRam functionality to read values from target memory address."""
 
 from mchplnet.lnetframe import LNetFrame
 
 
 class FrameGetRam(LNetFrame):
-    """
-    Class implementation for 'GetRam' frame in the LNet protocol.
+    """Class implementation for 'GetRam' frame in the LNet protocol.
 
     This frame is responsible for setting up the request frame for the MCU to 'Get' the variable value.
     """
 
     def __init__(self, address: int, read_size: int, data_type: int, uc_width: int):
-        """
-        initialize the FrameGetRam instance.
+        """Initialize the FrameGetRam instance.
 
-        args:
+        Args:
             address (int): Address of the variable.
             read_Size (int): number of bytes to be read by the frame from microcontroller.
             uc_width (int): Width of the variable from microcontroller (in bytes).
@@ -34,9 +28,7 @@ class FrameGetRam(LNetFrame):
 
     def _get_data(self):
         byte_address = self.address.to_bytes(length=self.uc_width, byteorder="little")
-        self.data.extend(
-            [self.service_id, *byte_address, self.read_size, self.value_data_type]
-        )
+        self.data.extend([self.service_id, *byte_address, self.read_size, self.value_data_type])
 
     def _deserialize(self):
         # Extract the size of the received data
@@ -56,8 +48,7 @@ class FrameGetRam(LNetFrame):
         return self.received[service_data_begin:service_data_end]
 
     def set_size(self, size: int):
-        """
-        Set the size of the variable for the LNET frame for GetRamBlock.
+        """Set the size of the variable for the LNET frame for GetRamBlock.
 
         Args:
             size (int): Size of the variable.
@@ -65,8 +56,7 @@ class FrameGetRam(LNetFrame):
         self.read_size = size
 
     def get_size(self):
-        """
-        Get the size of the variable.
+        """Get the size of the variable.
 
         Returns:
             int: Size of the variable.
@@ -74,8 +64,7 @@ class FrameGetRam(LNetFrame):
         return self.read_size
 
     def set_address(self, address: int):
-        """
-        Set the address of the variable.
+        """Set the address of the variable.
 
         Args:
             address (int): Address of the variable.
@@ -83,8 +72,7 @@ class FrameGetRam(LNetFrame):
         self.address = address
 
     def get_address(self):
-        """
-        Get the address of the variable.
+        """Get the address of the variable.
 
         Returns:
             int: Address of the variable.
