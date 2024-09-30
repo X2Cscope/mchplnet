@@ -64,7 +64,7 @@ class FrameDeviceInfo(LNetFrame):
         hex_value = hex(value)
 
         processor_ids_16_bit = {
-            "0x8210": "__GENERIC_MICROCHIP_DSPIC__",
+            #"0x8210": "__GENERIC_MICROCHIP_DSPIC__", # TODO Should be uncommented for dspic.
             "0x8230": "__GENERIC_MICROCHIP_PIC24__",
             "0x0221": "__DSPIC33FJ256MC710__",
             "0x0222": "__DSPIC33FJ128MC706__",
@@ -83,12 +83,14 @@ class FrameDeviceInfo(LNetFrame):
         }
 
         processor_ids_32_bit = {
+            "0x8240": "X2C_GENERIC_MICROCHIP_DSPIC33A",
             "0x8220": "__GENERIC_MICROCHIP_PIC32__",
             "0x8320": "__GENERIC_ARM_ARMV6__",
             "0x8310": "__GENERIC_ARM_ARMV7__",
             "0x0241": "__PIC32MZ2048EC__",
             "0x0251": "__PIC32MX170F256__",
         }
+
 
         if hex_value in processor_ids_16_bit:
             logging.info(f"Processor is: {processor_ids_16_bit.get(hex_value)} :16-bit")
