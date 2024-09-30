@@ -64,7 +64,7 @@ class FrameDeviceInfo(LNetFrame):
         hex_value = hex(value)
 
         processor_ids_16_bit = {
-            #"0x8210": "__GENERIC_MICROCHIP_DSPIC__", # TODO Should be uncommented for dspic.
+            "0x8210": "__GENERIC_MICROCHIP_DSPIC__",
             "0x8230": "__GENERIC_MICROCHIP_PIC24__",
             "0x0221": "__DSPIC33FJ256MC710__",
             "0x0222": "__DSPIC33FJ128MC706__",
@@ -179,12 +179,12 @@ class FrameDeviceInfo(LNetFrame):
             "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics".
         """
         dsp_state = {
-            0x00: "MONITOR - Monitor runs on target but no application",
-            0x01: "APPLICATION LOADED - Application runs on target (X2Cscope Update function is being executed)",
-            0x02: "IDLE - Application is idle (X2Cscope Update Function is not being executed)",
-            0x03: "INIT - Application is initializing and usually changes to state 'IDLE' after being finished",
-            0x04: "APPLICATION RUNNING - POWER OFF - Application is running with disabled power electronics",
-            0x05: "APPLICATION RUNNING - POWER ON - Application is running with enabled power electronics",
+            0x00: "Monitor runs on target but no application",
+            0x01: "Application runs on target",
+            0x02: "Application is idle",
+            0x03: "Application is initializing and usually changes to state 'IDLE' after being finished",
+            0x04: "POWER OFF",
+            0x05: "POWER ON",
         }
         return dsp_state.get(self.received[38], "Unknown DSP State")
 
