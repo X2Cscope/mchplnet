@@ -16,12 +16,12 @@ from mchplnet.interfaces.factory import InterfaceFactory
 from mchplnet.interfaces.factory import InterfaceType as IType
 from mchplnet.lnet import LNet
 ```
-3. Create an interface according to your requirements and initialize the LNet with the interface:
+1. Create an interface according to your requirements and initialize the LNet with the interface:
 ```
 interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM8", baudrate=115200)
 l_net = mchplnet.LNet(interface))
 ```
-4. Use the appropriate functions, such as get_ram, to interact with variables by specifying their address and size:
+1. Use the appropriate functions, such as get_ram, to interact with variables by specifying their address and size:
 
 ```
 var_address = 0x00000000
@@ -29,7 +29,7 @@ var_size = 4
 var_value = l_net.get_ram(var_address, var_size) 
 logging.debug(var_value)
 ```
-5. To modify the value of a variable, use the put_ram function:
+1. To modify the value of a variable, use the put_ram function:
 
 ```
 var_newValue = 500
