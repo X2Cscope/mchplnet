@@ -1,8 +1,9 @@
 """Scope classes needed to implement scope functionality being called under frame_save_parameter."""
 
+import struct
 from dataclasses import dataclass
 from typing import Dict
-import struct
+
 
 @dataclass
 class ScopeChannel:
@@ -114,7 +115,10 @@ class ScopeSetup:
         """
         if channel_name in self.channels:
             self.channels.pop(channel_name)
-            if self.scope_trigger.channel and self.scope_trigger.channel.name == channel_name:
+            if (
+                self.scope_trigger.channel
+                and self.scope_trigger.channel.name == channel_name
+            ):
                 self.reset_trigger()
         return len(self.channels)
 
@@ -153,8 +157,6 @@ class ScopeSetup:
         self.scope_state = 1
         self.scope_trigger = scope_trigger
 
-
-
     def _trigger_level_to_bytes(self):
         """Convert user defined trigger level to a byte array.
 
@@ -164,7 +166,7 @@ class ScopeSetup:
         if self.scope_trigger.channel:
             if isinstance(self.scope_trigger.trigger_level, float):
                 # Convert float to bytes using struct
-                return struct.pack('<f', self.scope_trigger.trigger_level)
+                return struct.pack("<f", self.scope_trigger.trigger_level)
             else:
                 # Assume it is an integer and use to_bytes
                 return self.scope_trigger.trigger_level.to_bytes(
@@ -240,7 +242,9 @@ class ScopeSetup:
 
         buffer.extend(self._trigger_level_to_bytes())
         buffer.extend(self._trigger_delay_to_bytes())
-        buffer.extend([self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode])
+        buffer.extend(
+            [self.scope_trigger.trigger_edge, self.scope_trigger.trigger_mode]
+        )
         return buffer
 
     def _get_trigger_data_type(self):

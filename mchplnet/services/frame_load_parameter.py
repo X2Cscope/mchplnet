@@ -42,12 +42,10 @@ class LoadScopeData:
 
 
 class FrameLoadParameter(LNetFrame):
-    """Class responsible for loading parameters using the LNet protocol.
-    """
+    """Class responsible for loading parameters using the LNet protocol."""
 
     def __init__(self):
-        """Initialize the FrameLoadParameter instance.
-        """
+        """Initialize the FrameLoadParameter instance."""
         super().__init__()
         self.address = None
         self.size = None
@@ -82,5 +80,7 @@ class FrameLoadParameter(LNetFrame):
         return LoadScopeData(**extracted_data)
 
     def _get_data(self):
-        self.unique_parameter = self.unique_parameter.to_bytes(length=2, byteorder="little")
+        self.unique_parameter = self.unique_parameter.to_bytes(
+            length=2, byteorder="little"
+        )
         self.data.extend([self.service_id, *self.unique_parameter])

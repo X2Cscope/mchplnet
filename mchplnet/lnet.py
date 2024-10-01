@@ -5,8 +5,8 @@ from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
 from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
 from mchplnet.services.frame_putram import FramePutRam
-from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
 from mchplnet.services.frame_reboot import FrameReboot
+from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
 
 
 class LNet:
@@ -55,8 +55,6 @@ class LNet:
             self.device_info = device_info_frame.deserialize()
         return self.device_info
 
-
-
     def reboot_device(self):
         """Retrieve and return the device information.
 
@@ -76,7 +74,9 @@ class LNet:
             RuntimeError: If the device information has not been initialized.
         """
         if self.device_info is None:
-            raise RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
+            raise RuntimeError(
+                "DeviceInfo is not initialized. Call get_device_info() first."
+            )
 
     def save_parameter(self):
         """Save the current scope configuration parameters to the microcontroller.
@@ -123,7 +123,9 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
+        get_ram_frame = FrameGetRam(
+            address, bytes_to_read, data_type, self.device_info.uc_width
+        )
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
@@ -141,7 +143,9 @@ class LNet:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
         self._check_device_info()
-        get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
+        get_ram_frame = FrameGetRam(
+            address, data_type, data_type, self.device_info.uc_width
+        )
         get_ram_frame.received = self._read_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 

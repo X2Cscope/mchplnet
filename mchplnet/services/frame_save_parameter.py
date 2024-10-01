@@ -3,6 +3,7 @@
 from mchplnet.lnetframe import LNetFrame
 from mchplnet.services.scope import ScopeSetup
 
+
 class FrameSaveParameter(LNetFrame):
     """The Save Parameter is used to configure the Scope and to start the sampling procedure for the defined variables.
 

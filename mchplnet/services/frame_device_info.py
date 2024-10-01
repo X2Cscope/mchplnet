@@ -46,8 +46,7 @@ class FrameDeviceInfo(LNetFrame):
     """
 
     def __init__(self):
-        """Initialize the FrameDeviceInfo class.
-        """
+        """Initialize the FrameDeviceInfo class."""
         super().__init__()
         self.service_id = 0
 
@@ -90,7 +89,6 @@ class FrameDeviceInfo(LNetFrame):
             "0x0241": "__PIC32MZ2048EC__",
             "0x0251": "__PIC32MX170F256__",
         }
-
 
         if hex_value in processor_ids_16_bit:
             logging.info(f"Processor is: {processor_ids_16_bit.get(hex_value)} :16-bit")

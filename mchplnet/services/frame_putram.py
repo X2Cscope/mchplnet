@@ -6,8 +6,7 @@ from mchplnet.lnetframe import LNetFrame
 
 
 class FramePutRam(LNetFrame):
-    """FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
-    """
+    """FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value."""
 
     def __init__(self, address: int, size: int, width: int, value: bytearray = None):
         """Initialize the FramePutRam instance.
@@ -26,7 +25,9 @@ class FramePutRam(LNetFrame):
         self.value = bytearray() if value is None else value
 
     def _get_data(self):
-        byte_address = self.address.to_bytes(length=self.value_dataType, byteorder="little")
+        byte_address = self.address.to_bytes(
+            length=self.value_dataType, byteorder="little"
+        )
         self.data.extend([self.service_id, *byte_address, self.size, *self.value])
 
     def set_all(self, address: int, size: int, value: bytearray) -> None:

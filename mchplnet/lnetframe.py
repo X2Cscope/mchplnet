@@ -60,8 +60,7 @@ class LNetFrame(ABC):
     """
 
     def __init__(self):
-        """Initialize an LNetFrame instance.
-        """
+        """Initialize an LNetFrame instance."""
         self.received = None
         self.service_id = None
         self.__syn = 85
@@ -117,7 +116,9 @@ class LNetFrame(ABC):
 
         self.crc = crc_calculation  # Add the hex checksum to the list of the data
 
-        logging.debug("Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc))
+        logging.debug(
+            "Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc)
+        )
 
         return self.crc
 
@@ -140,7 +141,11 @@ class LNetFrame(ABC):
             bool: True if the frame integrity check passes, False otherwise.
         """
         if self._crc_checksum(self.received[:-1]) != self.received[-1]:
-            logging.error("CRC Checksum doesn't match: {}".format(self._crc_checksum(self.received)))
+            logging.error(
+                "CRC Checksum doesn't match: {}".format(
+                    self._crc_checksum(self.received)
+                )
+            )
             return False
         return True
 
@@ -163,8 +168,7 @@ class LNetFrame(ABC):
         return self.received[3] == self.service_id and self.received[4] == 0
 
     def _remove_fill_byte(self):
-        """Remove fill bytes (0x00) from the received frame.
-        """
+        """Remove fill bytes (0x00) from the received frame."""
         z = 1
         while z < len(self.received):
             if self.received[z] == 0x55 or self.received[z] == 0x02:
