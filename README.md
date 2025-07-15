@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/X2Cscope/pyx2cscope/feat-faster-monitoring/pyx2cscope/gui/img/pyx2cscope.jpg" alt="PyX2CScope Logo" width="250">
+  <img src="https://raw.githubusercontent.com/X2Cscope/pyx2cscope/refs/heads/main/doc/images/pyx2cscope_logo.png" alt="PyX2CScope Logo" width="250">
 </p>
 
 # mchplnet

@@ -1,5 +1,6 @@
-"""File: frame_loadLoadParameter.py
-Usage: FrameLoadParameter is responsible for loading parameters, which are used to get the Scope Data Array address
+"""Load Parameters frame definition.
+
+The parameters loaded are used to get the Scope Data Array address 
 and maximum size for once, as well as to check the current scope state.
 """
 
@@ -42,12 +43,10 @@ class LoadScopeData:
 
 
 class FrameLoadParameter(LNetFrame):
-    """Class responsible for loading parameters using the LNet protocol.
-    """
+    """Class responsible for loading parameters using the LNet protocol."""
 
     def __init__(self):
-        """Initialize the FrameLoadParameter instance.
-        """
+        """Initialize the FrameLoadParameter instance."""
         super().__init__()
         self.address = None
         self.size = None
@@ -74,8 +73,7 @@ class FrameLoadParameter(LNetFrame):
         for field, size in data_structure:
             extracted_data[field] = int.from_bytes(
                 data_bytes[start_pos : start_pos + size],
-                byteorder="little",
-                signed=True,
+                byteorder="little"
             )
             start_pos += size
 
