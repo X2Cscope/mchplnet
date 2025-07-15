@@ -74,8 +74,7 @@ class FrameLoadParameter(LNetFrame):
         for field, size in data_structure:
             extracted_data[field] = int.from_bytes(
                 data_bytes[start_pos : start_pos + size],
-                byteorder="little",
-                signed=True,
+                byteorder="little"
             )
             start_pos += size
 
