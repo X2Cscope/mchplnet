@@ -63,6 +63,7 @@ class ScopeSetup:
     """
 
     def __init__(self):
+        """Initializes a new instance of the ScopeSetup class."""
         self.scope_state = 2
         self.sample_time_factor = 1
         self.channels: Dict[str, ScopeChannel] = {}
@@ -152,8 +153,6 @@ class ScopeSetup:
         """
         self.scope_state = 1
         self.scope_trigger = scope_trigger
-
-
 
     def _trigger_level_to_bytes(self):
         """Convert user defined trigger level to a byte array.

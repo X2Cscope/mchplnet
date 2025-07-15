@@ -1,5 +1,4 @@
-"""File: frame_device_info.py
-Description: This module defines a custom frame for device information retrieval and interpretation.
+"""This module defines a custom frame for device information retrieval and interpretation.
 
 This frame is responsible for Hand-Shake, Monitor-Version, Identifying processor Type, and Application Version.
 It extracts various parameters related to the device, such as monitor version, application version, processor ID,

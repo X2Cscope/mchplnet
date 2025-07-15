@@ -1,13 +1,10 @@
-"""File: frame_putram.py
-Description: This module writes user defined values to target memory address.
-"""
+"""This module writes user defined values to target memory address."""
 
 from mchplnet.lnetframe import LNetFrame
 
 
 class FramePutRam(LNetFrame):
-    """FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value.
-    """
+    """FramePutRam is responsible for setting up the request frame for MCU to 'Set' the variable value."""
 
     def __init__(self, address: int, size: int, width: int, value: bytearray = None):
         """Initialize the FramePutRam instance.
