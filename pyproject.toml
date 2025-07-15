@@ -4,11 +4,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mchplnet"
-version = "0.2.1"
+version = "0.2.2"
 description = "Python implementation of Microchip LNet protocol"
 authors = [
-  "Yash Agarwal <yash.agarwal@microchip.com>",
-  "Edras Pacola",
+  "Yash Agarwal",
+  "Edras Pacola <edras.pacola@microchip.com>",
   "Christoph Baumgartner",
   "Mark Wendler",
 ]

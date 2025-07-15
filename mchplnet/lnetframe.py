@@ -180,8 +180,8 @@ class LNetFrame(ABC):
         self._remove_fill_byte()
         if self.frame_integrity() and self._check_frame_protocol():
             return self._deserialize()
-        else:
-            logging.error("Error on frame integrity or frame not correct!")
+        logging.error("Error on frame integrity or frame not correct!")
+        return None
 
     @staticmethod
     def get_error_id(error_id: int):
