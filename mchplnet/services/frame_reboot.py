@@ -2,13 +2,10 @@
 from mchplnet.lnetframe import LNetFrame
 
 class FrameReboot(LNetFrame):
-    """Custom frame for device information retrieval and interpretation.
-    Inherits from LNetFrame.
-    """
+    """Custom frame for device information retrieval and interpretation. Inherits from LNetFrame."""
 
     def __init__(self):
-        """Initialize the FrameDeviceInfo class.
-        """
+        """Initialize the FrameDeviceInfo class."""
         super().__init__()
         self.service_id = 25
 

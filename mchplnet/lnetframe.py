@@ -60,8 +60,7 @@ class LNetFrame(ABC):
     """
 
     def __init__(self):
-        """Initialize an LNetFrame instance.
-        """
+        """Initialize an LNetFrame instance."""
         self.received = None
         self.service_id = None
         self.__syn = 85
@@ -163,8 +162,7 @@ class LNetFrame(ABC):
         return self.received[3] == self.service_id and self.received[4] == 0
 
     def _remove_fill_byte(self):
-        """Remove fill bytes (0x00) from the received frame.
-        """
+        """Remove fill bytes (0x00) from the received frame."""
         z = 1
         while z < len(self.received):
             if self.received[z] == 0x55 or self.received[z] == 0x02:

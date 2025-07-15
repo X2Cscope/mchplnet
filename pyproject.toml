@@ -28,3 +28,18 @@ pyserial = "^3.5"
 [tool.setuptools.packages.find]
 exclude = ["test", "doc"]  # empty by default
 
+[tool.ruff]
+line-length = 120
+# only allow the specified pydocstyle convention
+lint.pydocstyle.convention = "google"
+lint.select = ["D"]
+# I - isort style for imports
+# N - pep8-naming
+# F - pyflakes
+# D - pydocstyle
+# PL - pylint
+lint.extend-select = ["I", "N", "F", "PL", "D"]
+lint.ignore = ["I001", "PLW0603", "PLW0602", "PLR0913"] #TODO fix the import issue. no errors on local machine and errors on github action.
+
+
+
