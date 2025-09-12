@@ -166,10 +166,11 @@ class ScopeSetup:
                 return struct.pack('<f', self.scope_trigger.trigger_level)
             else:
                 # Assume it is an integer and use to_bytes
+                
                 return self.scope_trigger.trigger_level.to_bytes(
                     self.scope_trigger.channel.data_type_size,
                     byteorder="little",
-                    signed=True,
+                    signed=self.scope_trigger.channel.is_signed
                 )
         else:
             return bytes(2)
