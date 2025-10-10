@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from mchplnet.interfaces.abstract_interface import InterfaceABC
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
@@ -27,6 +28,7 @@ class LNet:
         self.interface = interface
         self.device_info = None
         self.scope_setup = ScopeSetup()
+        self._lock = threading.Lock()
         if handshake:
             self._handshake()
 
@@ -51,11 +53,9 @@ class LNet:
         """
         if not self.device_info:
             device_info_frame = FrameDeviceInfo()
-            device_info_frame.received = self._read_data(device_info_frame.serialize())
+            device_info_frame.received = self._xchg_data(device_info_frame.serialize())
             self.device_info = device_info_frame.deserialize()
         return self.device_info
-
-
 
     def reboot_device(self):
         """Retrieve and return the device information.
@@ -66,7 +66,7 @@ class LNet:
         self._check_device_info()
         reboot_device = FrameReboot()
         print(reboot_device.serialize())
-        reboot_device.received = self._read_data(reboot_device.serialize())
+        reboot_device.received = self._xchg_data(reboot_device.serialize())
         return reboot_device.received
 
     def _check_device_info(self):
@@ -90,7 +90,7 @@ class LNet:
         self._check_device_info()
         frame_save_param = FrameSaveParameter()
         frame_save_param.set_scope_setup(self.scope_setup)
-        frame_save_param.received = self._read_data(frame_save_param.serialize())
+        frame_save_param.received = self._xchg_data(frame_save_param.serialize())
         return frame_save_param.deserialize()
 
     def load_parameters(self) -> LoadScopeData:
@@ -104,7 +104,7 @@ class LNet:
         """
         self._check_device_info()
         frame_load_param = FrameLoadParameter()
-        frame_load_param.received = self._read_data(frame_load_param.serialize())
+        frame_load_param.received = self._xchg_data(frame_load_param.serialize())
         self.scope_data = frame_load_param.deserialize()
         return self.scope_data
 
@@ -124,7 +124,7 @@ class LNet:
         """
         self._check_device_info()
         get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
-        get_ram_frame.received = self._read_data(get_ram_frame.serialize())
+        get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
     def get_ram(self, address: int, data_type: int) -> bytearray:
@@ -142,7 +142,7 @@ class LNet:
         """
         self._check_device_info()
         get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
-        get_ram_frame.received = self._read_data(get_ram_frame.serialize())
+        get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
 
     def put_ram(self, address: int, size: int, value: bytearray):
@@ -161,11 +161,13 @@ class LNet:
         """
         self._check_device_info()
         put_ram_frame = FramePutRam(address, size, self.device_info.uc_width, value)
-        put_ram_frame.received = self._read_data(put_ram_frame.serialize())
+        put_ram_frame.received = self._xchg_data(put_ram_frame.serialize())
         return put_ram_frame.deserialize()
 
-    def _read_data(self, frame):
+    def _xchg_data(self, frame):
         """Send a frame to the microcontroller and read the response.
+
+        This method is thread-safe and ensures that only one thread can access the interface at a time.
 
         Args:
             frame: The frame data to be sent.
@@ -173,8 +175,9 @@ class LNet:
         Returns:
             The response from the microcontroller.
         """
-        self.interface.write(frame)
-        return self.interface.read()
+        with self._lock:
+            self.interface.write(frame)
+            return self.interface.read()
 
     def get_scope_setup(self) -> ScopeSetup:
         """Get the current scope setup.
