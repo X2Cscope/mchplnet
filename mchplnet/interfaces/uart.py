@@ -2,13 +2,13 @@ import logging
 
 import serial
 
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 
 
-class LNetSerial(InterfaceABC):
+class LNetSerial(Interface):
     """A class representing a serial communication interface for the LNet framework.
 
-    This class implements the InterfaceABC interface for serial communication.
+    This class implements the Interface interface for serial communication.
 
     Attributes:
         com_port (str): The serial port name.

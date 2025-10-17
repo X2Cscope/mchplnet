@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
 from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
@@ -17,11 +17,11 @@ class LNet:
     and reading/writing data to the microcontroller's RAM.
     """
 
-    def __init__(self, interface: InterfaceABC, handshake: bool = True):
+    def __init__(self, interface: Interface, handshake: bool = True):
         """Initialize the LNet instance.
 
         Args:
-            interface (InterfaceABC): The interface for communication with the microcontroller.
+            interface (Interface): The interface for communication with the microcontroller.
             handshake (bool, optional): If True, performs an interface handshake upon initialization. Defaults to True.
         """
         self.scope_data = None

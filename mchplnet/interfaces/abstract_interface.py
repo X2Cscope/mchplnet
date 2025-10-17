@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class InterfaceABC(ABC):
+class Interface(ABC):
     """An abstract base class defining the interface for a generic interface.
 
     This abstract base class (ABC) defines the methods and attributes that must be implemented by
@@ -34,8 +34,8 @@ class InterfaceABC(ABC):
             Check if the interface is open and operational. Subclasses should implement this method.
 
     Examples:
-        # Define a concrete interface class that implements InterfaceABC
-        class SerialInterface(InterfaceABC):
+        # Define a concrete interface class that implements Interface
+        class SerialInterface(Interface):
             def __init__(self, port, baud_rate):
                 # Constructor implementation here
 

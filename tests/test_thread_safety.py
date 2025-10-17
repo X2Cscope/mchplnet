@@ -11,10 +11,10 @@ import unittest
 from unittest.mock import Mock, MagicMock
 
 from mchplnet.lnet import LNet
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 
 
-class MockInterface(InterfaceABC):
+class MockInterface(Interface):
     """Mock interface for testing thread safety."""
 
     def __init__(self, delay=0.01):

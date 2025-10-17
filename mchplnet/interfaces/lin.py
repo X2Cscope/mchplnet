@@ -1,7 +1,7 @@
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 
 
-class LNetLin(InterfaceABC):
+class LNetLin(Interface):
     def is_open(self):
         pass
 

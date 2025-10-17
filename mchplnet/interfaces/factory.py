@@ -6,7 +6,7 @@ Usage: Ensures the proper configuration of the communication interface supported
 import logging
 from enum import Enum
 
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.interfaces.can import LNetCan
 from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
@@ -22,7 +22,7 @@ class InterfaceType(Enum):
 
 class InterfaceFactory:
     @staticmethod
-    def get_interface(interface_type: InterfaceType, *args: object, **kwargs: object) -> InterfaceABC:
+    def get_interface(interface_type: InterfaceType, *args: object, **kwargs: object) -> Interface:
         interfaces = {
             InterfaceType.SERIAL: (
                 LNetSerial,
