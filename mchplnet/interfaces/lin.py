@@ -11,7 +11,7 @@ class LNetLin(Interface):
     def stop(self):
         pass
 
-    def __init__(self, params=dict):
+    def __init__(self, *args, **kwargs):
         pass
 
     def write(self, data):
