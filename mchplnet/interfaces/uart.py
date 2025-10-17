@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import serial
 
@@ -49,7 +50,7 @@ class LNetSerial(Interface):
             **kwargs: Arbitrary keyword arguments.
 
         Keyword Args:
-            port (str, optional): Serial port name. Defaults to "COM11".
+            port (str, optional): Serial port name. Defaults to "COM1".
             baud_rate (int, optional): Baud rate (bits per second). Defaults to 115200.
             parity (int, optional): Parity setting. Defaults to 0.
             stop_bit (int, optional): Number of stop bits. Defaults to 1.
@@ -58,7 +59,9 @@ class LNetSerial(Interface):
         Returns:
             None
         """
-        self.com_port = kwargs["port"] if "port" in kwargs else "COM11"
+        if "port" not in kwargs:
+            warnings.warn("No port provided, using default COM1", Warning)
+        self.com_port = kwargs["port"] if "port" in kwargs else "COM1"
         self.baud_rate = kwargs["baud_rate"] if "baud_rate" in kwargs else 115200
         self.parity = kwargs["parity"] if "parity" in kwargs else 0
         self.stop_bit = kwargs["stop_bit"] if "stop_bit" in kwargs else 1
