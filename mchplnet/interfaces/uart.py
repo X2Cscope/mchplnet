@@ -132,8 +132,6 @@ class LNetSerial(Interface):
         """
         if self.serial:
             self.serial.close()
-        else:
-            return
 
     def write(self, data):
         """Write data to the serial port.
@@ -146,8 +144,6 @@ class LNetSerial(Interface):
         """
         if self.serial:
             self.serial.write(data)
-        else:
-            return
 
     def is_open(self) -> bool:
         """Check if the serial port is open and operational.
@@ -158,7 +154,7 @@ class LNetSerial(Interface):
         Returns:
             bool: True if the serial port is open, False otherwise.
         """
-        return self.serial.is_open
+        return self.serial.is_open if self.serial else False
 
     def read(self):
         response_list = bytearray()
