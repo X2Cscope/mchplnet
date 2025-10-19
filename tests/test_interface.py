@@ -1,22 +1,16 @@
-"""
-Test suite for Interface and its implementations.
+"""Test suite for Interface and its implementations.
 
 This module contains tests for the abstract interface and its concrete implementations.
 """
 
 import unittest
 import time
-import random
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.interfaces.factory import InterfaceFactory, InterfaceType
 from mchplnet.interfaces.uart import LNetSerial
-from mchplnet.interfaces.tcp_ip import LNetTcpIp
-from mchplnet.interfaces.can import LNetCan
-from mchplnet.interfaces.lin import LNetLin
 
 
 class TestInterface(unittest.TestCase):
@@ -35,6 +29,11 @@ class MockInterface(Interface):
     """Concrete implementation of Interface for testing."""
 
     def __init__(self, **kwargs):
+        """Initialize the mock interface.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments including delay and auto_start.
+        """
         self._is_open = False
         self.write_buffer = bytearray()
         self.read_buffer = bytearray()
@@ -44,6 +43,17 @@ class MockInterface(Interface):
             self.start()
 
     def write(self, data):
+        """Write data to the mock interface.
+
+        Args:
+            data: Data to write.
+
+        Returns:
+            int: Number of bytes written.
+
+        Raises:
+            IOError: If interface is not open.
+        """
         if not self.is_open():
             raise IOError("Interface not open")
         if self.delay > 0:
@@ -52,6 +62,14 @@ class MockInterface(Interface):
         return len(data)
 
     def read(self):
+        """Read data from the mock interface.
+
+        Returns:
+            bytes: Data read from the interface.
+
+        Raises:
+            IOError: If interface is not open.
+        """
         if not self.is_open():
             raise IOError("Interface not open")
         if self.delay > 0:
@@ -61,12 +79,19 @@ class MockInterface(Interface):
         return data
 
     def start(self):
+        """Start the mock interface."""
         self._is_open = True
 
     def stop(self):
+        """Stop the mock interface."""
         self._is_open = False
 
     def is_open(self):
+        """Check if the mock interface is open.
+
+        Returns:
+            bool: True if open, False otherwise.
+        """
         return self._is_open
 
 

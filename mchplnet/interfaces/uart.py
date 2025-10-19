@@ -1,3 +1,5 @@
+"""UART/Serial interface implementation for LNet protocol."""
+
 import logging
 import warnings
 
@@ -160,6 +162,11 @@ class LNetSerial(Interface):
         return self.serial.is_open if self.serial else False
 
     def read(self):
+        """Read data from the serial port with LNet protocol framing.
+
+        Returns:
+            bytearray: The data read from the serial port.
+        """
         response_list = bytearray()
         if self.serial:
             counter = 0

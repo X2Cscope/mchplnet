@@ -1,3 +1,5 @@
+"""Abstract base class defining the interface contract for LNet communication."""
+
 from abc import ABC, abstractmethod
 
 

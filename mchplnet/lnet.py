@@ -1,3 +1,5 @@
+"""LNet protocol handler for microcontroller communication."""
+
 import logging
 import threading
 

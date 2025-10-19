@@ -1,3 +1,5 @@
+"""LNet frame serialization and deserialization implementation."""
+
 import logging
 from abc import ABC, abstractmethod
 

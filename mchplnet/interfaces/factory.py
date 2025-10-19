@@ -14,6 +14,7 @@ from mchplnet.interfaces.uart import LNetSerial
 
 
 class InterfaceType(Enum):
+    """Enumeration of supported interface types."""
     SERIAL = 1
     CAN = 2
     LIN = 3
@@ -21,8 +22,20 @@ class InterfaceType(Enum):
 
 
 class InterfaceFactory:
+    """Factory class for creating interface instances."""
+
     @staticmethod
     def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:
+        """Create and return an interface instance based on the specified type.
+
+        Args:
+            interface_type (InterfaceType): The type of interface to create.
+            *args: Variable length argument list passed to the interface constructor.
+            **kwargs: Arbitrary keyword arguments passed to the interface constructor.
+
+        Returns:
+            Interface: An instance of the requested interface type.
+        """
         interfaces = {
             InterfaceType.SERIAL: LNetSerial,
             InterfaceType.CAN: LNetCan,

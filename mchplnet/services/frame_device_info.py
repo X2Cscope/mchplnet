@@ -21,6 +21,7 @@ from mchplnet.lnetframe import LNetFrame
 
 @dataclass
 class DeviceInfo:
+    """Data class containing device information from the microcontroller."""
     monitor_version: int = 0
     appVer: int = 0
     maxTargetSize = 0
@@ -41,16 +42,17 @@ class DeviceInfo:
 # noinspection PyTypeChecker
 class FrameDeviceInfo(LNetFrame):
     """Custom frame for device information retrieval and interpretation.
+
     Inherits from LNetFrame.
     """
 
     def __init__(self):
-        """Initialize the FrameDeviceInfo class.
-        """
+        """Initialize the FrameDeviceInfo class."""
         super().__init__()
         self.service_id = 0
 
     def _get_data(self):
+        """Append service ID to the data payload."""
         self.data.append(self.service_id)
 
     def _get_processor_id(self):

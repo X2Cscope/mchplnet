@@ -1,3 +1,4 @@
+"""Frame implementation for device reboot functionality."""
 
 from mchplnet.lnetframe import LNetFrame
 

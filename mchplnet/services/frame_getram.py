@@ -14,9 +14,9 @@ class FrameGetRam(LNetFrame):
 
         Args:
             address (int): Address of the variable.
-            read_Size (int): number of bytes to be read by the frame from microcontroller.
+            read_size (int): Number of bytes to be read by the frame from microcontroller.
+            data_type (int): Describes the type of the variable (1: 8-bit, 2:16-bit, 4:32-bit).
             uc_width (int): Width of the variable from microcontroller (in bytes).
-            value_dataType(int): describes the type of the variable (1: 8-bit, 2:16-bit, 4:32-bit)
         """
         super().__init__()
 

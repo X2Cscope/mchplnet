@@ -1,5 +1,4 @@
-"""
-Test suite to verify threading.Lock() functionality in LNet class.
+"""Test suite to verify threading.Lock() functionality in LNet class.
 
 This test verifies that the threading lock in the _xchg_data method
 prevents race conditions when multiple threads access the interface simultaneously.
@@ -8,7 +7,7 @@ prevents race conditions when multiple threads access the interface simultaneous
 import threading
 import time
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from mchplnet.lnet import LNet
 from mchplnet.interfaces.abstract_interface import Interface
