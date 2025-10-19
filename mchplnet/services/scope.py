@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from typing import Dict
 import struct
 
+# Scope configuration constants
+MAX_SCOPE_CHANNELS = 8  # Maximum number of channels allowed in scope configuration
+
 @dataclass
 class ScopeChannel:
     """Represents a scope channel configuration.
@@ -96,7 +99,7 @@ class ScopeSetup:
             int: The total number of channels after addition or -1 if the limit is exceeded. Max allowed channels are 8.
         """
         if channel.name not in self.channels:
-            if len(self.channels) > 8:
+            if len(self.channels) > MAX_SCOPE_CHANNELS:
                 return -1
             self.channels[channel.name] = channel
         if trigger:

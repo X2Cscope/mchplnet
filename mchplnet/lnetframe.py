@@ -3,6 +3,13 @@
 import logging
 from abc import ABC, abstractmethod
 
+# LNet protocol constants
+LNET_SYN_BYTE = 0x55  # Frame synchronization byte
+LNET_FILL_BYTE_1 = 0x55  # First fill byte marker
+LNET_FILL_BYTE_2 = 0x02  # Second fill byte marker
+LNET_SYN_BYTE_DECIMAL = 85  # SYN byte in decimal
+LNET_FILL_BYTE_2_DECIMAL = 2  # Fill byte 2 in decimal
+
 
 class LNetFrame(ABC):
     """LNetFrame is an abstract base class that implements the structure of LNet frames.
@@ -65,7 +72,7 @@ class LNetFrame(ABC):
         """Initialize an LNetFrame instance."""
         self.received = None
         self.service_id = None
-        self.__syn = 85
+        self.__syn = LNET_SYN_BYTE_DECIMAL
         self.__node = 1
         self.data = []  # data
         self.crc = None
@@ -111,9 +118,9 @@ class LNetFrame(ABC):
 
         # Checksum 0x55 == 0xAA   85 == 170
         # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
-        if crc_calculation == 85:
+        if crc_calculation == LNET_SYN_BYTE_DECIMAL:
             crc_calculation = 170
-        elif crc_calculation == 2:
+        elif crc_calculation == LNET_FILL_BYTE_2_DECIMAL:
             crc_calculation = 253
 
         self.crc = crc_calculation  # Add the hex checksum to the list of the data
@@ -130,7 +137,7 @@ class LNetFrame(ABC):
         """
         i = 1
         while i < len(self.data):
-            if self.data[i] == 0x02 or self.data[i] == 0x55:
+            if self.data[i] in (LNET_FILL_BYTE_2, LNET_FILL_BYTE_1):
                 self.data.insert(i + 1, 0x00)
             i += 1
 
@@ -167,7 +174,7 @@ class LNetFrame(ABC):
         """Remove fill bytes (0x00) from the received frame."""
         z = 1
         while z < len(self.received):
-            if self.received[z] == 0x55 or self.received[z] == 0x02:
+            if self.received[z] in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
                 self.received.pop(z + 1)
             z += 1
 
