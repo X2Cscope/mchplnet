@@ -23,18 +23,18 @@ from mchplnet.lnetframe import LNetFrame
 class DeviceInfo:
     """Data class containing device information from the microcontroller."""
     monitor_version: int = 0
-    appVer: int = 0
-    maxTargetSize = 0
+    app_version: int = 0
+    max_target_size = 0
     processor_id: int = 0
-    monitorDate: int = 0
-    monitorTime: int = 0
-    appDate: int = 0
-    appTime: int = 0
+    monitor_date: int = 0
+    monitor_time: int = 0
+    app_date: int = 0
+    app_time: int = 0
     uc_width: int = 0
     dsp_state: int = 0
-    eventType: int = 0
-    eventID: int = 0
-    tableStructAdd: int = 0
+    event_type: int = 0
+    event_id: int = 0
+    table_struct_add: int = 0
     MACHINE_16: ClassVar[int] = 2
     MACHINE_32: ClassVar[int] = 4
 
@@ -106,17 +106,17 @@ class FrameDeviceInfo(LNetFrame):
             return None
 
     def _deserialize(self):
-        DeviceInfo.appVer = self._app_ver()
+        DeviceInfo.app_version = self._app_ver()
         DeviceInfo.monitor_version = self._monitor_ver()
         DeviceInfo.uc_width = self._get_processor_id()
-        DeviceInfo.monitorDate = self._monitor_date()
-        DeviceInfo.monitorTime = self._monitor_time()
-        DeviceInfo.appDate = self._app_date()
-        DeviceInfo.appTime = self._app_time()
+        DeviceInfo.monitor_date = self._monitor_date()
+        DeviceInfo.monitor_time = self._monitor_time()
+        DeviceInfo.app_date = self._app_date()
+        DeviceInfo.app_time = self._app_time()
         DeviceInfo.dsp_state = self._dsp_state()
-        DeviceInfo.eventType = self._event_type()
-        DeviceInfo.eventID = self._event_id()
-        DeviceInfo.tableStructAdd = self._table_struct_add()
+        DeviceInfo.event_type = self._event_type()
+        DeviceInfo.event_id = self._event_id()
+        DeviceInfo.table_struct_add = self._table_struct_add()
 
         return DeviceInfo
 
