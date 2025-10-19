@@ -1,5 +1,7 @@
+"""Frame implementation for device reboot functionality."""
 
 from mchplnet.lnetframe import LNetFrame
+
 
 class FrameReboot(LNetFrame):
     """Custom frame for device information retrieval and interpretation. Inherits from LNetFrame."""
@@ -19,3 +21,4 @@ class FrameReboot(LNetFrame):
         Nothing to do here once there is no service data on save parameter and
         errors and service id have already being checked by the superclass
         """
+        pass

@@ -6,7 +6,7 @@ Usage: Ensures the proper configuration of the communication interface supported
 import logging
 from enum import Enum
 
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.interfaces.can import LNetCan
 from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
@@ -14,6 +14,7 @@ from mchplnet.interfaces.uart import LNetSerial
 
 
 class InterfaceType(Enum):
+    """Enumeration of supported interface types."""
     SERIAL = 1
     CAN = 2
     LIN = 3
@@ -21,42 +22,27 @@ class InterfaceType(Enum):
 
 
 class InterfaceFactory:
+    """Factory class for creating interface instances."""
+
     @staticmethod
-    def get_interface(interface_type: InterfaceType, *args: object, **kwargs: object) -> InterfaceABC:
+    def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:
+        r"""Create and return an interface instance based on the specified type.
+
+        Args:
+            interface_type (InterfaceType): The type of interface to create.
+            *args: Variable length argument list passed to the interface constructor.
+            **kwargs: Arbitrary keyword arguments passed to the interface constructor.
+
+        Returns:
+            Interface: An instance of the requested interface type.
+        """
         interfaces = {
-            InterfaceType.SERIAL: (
-                LNetSerial,
-                {
-                    "port": "Serial port name or device path",
-                },
-            ),
-            InterfaceType.CAN: (
-                LNetCan,
-                {"channel": "CAN channel number or identifier"},
-            ),
-            InterfaceType.LIN: (
-                LNetLin,
-                {"channel": "LIN channel number or identifier"},
-            ),
-            InterfaceType.TCP_IP: (
-                LNetTcpIp,
-                {
-                    "host": "IP address or hostname of the remote device",
-                    "port": "Port number for TCP/IP communication",
-                },
-            ),
+            InterfaceType.SERIAL: LNetSerial,
+            InterfaceType.CAN: LNetCan,
+            InterfaceType.LIN: LNetLin,
+            InterfaceType.TCP_IP: LNetTcpIp,
         }
-
-        interface_class, required_params = interfaces[interface_type]
-
-        # TODO: required params should be a task of the interface, an not of the factory
-        # if the parameter is not supplied, it should assume default values
-        # Check if all required parameters are provided
-        missing_params = [param for param, description in required_params.items() if param not in kwargs]
-        if missing_params:
-            raise ValueError(f"Missing required parameters for {interface_type.name}: {', '.join(missing_params)}")
-
-        return interface_class(*args, **kwargs)
+        return interfaces.get(interface_type, LNetSerial)(*args, **kwargs)
 
 
 if __name__ == "__main__":

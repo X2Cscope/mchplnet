@@ -1,0 +1,97 @@
+name: Run format, Build Sphinx Documentation, tests
+
+on:
+  [pull_request]
+
+jobs:
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r quality.txt
+
+    - name: Code Format Check
+      run: |
+        ruff check .
+
+  version-check:
+    runs-on: ubuntu-latest
+    if: github.base_ref == 'main'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check version has been updated
+      run: |
+        # Get PR branch version
+        PR_VERSION=$(grep -oP '(?<=version = ")[^"]*' pyproject.toml)
+        echo "PR Version: $PR_VERSION"
+        
+        # Get main branch version
+        git fetch origin main:main
+        MAIN_VERSION=$(git show main:pyproject.toml | grep -oP '(?<=version = ")[^"]*')
+        echo "Main Version: $MAIN_VERSION"
+        
+        # Compare versions
+        if [ "$PR_VERSION" == "$MAIN_VERSION" ]; then
+          echo "❌ ERROR: Version in PR ($PR_VERSION) is the same as in main branch ($MAIN_VERSION)"
+          echo "Please update the version in pyproject.toml before merging to main"
+          exit 1
+        else
+          echo "✅ Version check passed: $PR_VERSION (PR) vs $MAIN_VERSION (main)"
+        fi
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r quality.txt
+        pip install -e .
+
+    - name: Run tests
+      run: |
+        pytest 
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r quality.txt
+          pip install -e .
+
+      - name: Build documentation
+        run: |
+          sphinx-build -M html doc build --keep-going 
+
+
