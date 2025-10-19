@@ -13,7 +13,7 @@ FRAME_COUNTER_SIZE_POSITION = 3  # Position in frame counter when SIZE field is 
 
 
 class LNetSerial(Interface):
-    """A class representing a serial communication interface for the LNet framework.
+    r"""A class representing a serial communication interface for the LNet framework.
 
     This class implements the Interface interface for serial communication.
 
@@ -49,11 +49,11 @@ class LNetSerial(Interface):
     """
 
     def __init__(self, *args, **kwargs):
-        """Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
+        r"""Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         Args:
-            \*args: Variable-length argument list.
-            \*\*kwargs: Arbitrary keyword arguments.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
         Keyword Args:
             port (str, optional): Serial port name. Defaults to "COM1".

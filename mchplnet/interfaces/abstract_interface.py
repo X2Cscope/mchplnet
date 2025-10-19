@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 
 class Interface(ABC):
-    """An abstract base class defining the interface for a generic interface.
+    r"""An abstract base class defining the interface for a generic interface.
 
     This abstract base class (ABC) defines the methods and attributes that must be implemented by
     concrete interface classes. It serves as a blueprint for creating interface classes for various
@@ -14,7 +14,7 @@ class Interface(ABC):
         None
 
     Methods:
-        __init__(\*args, \*\*kwargs):
+        __init__(\\*args, \\*\\*kwargs):
             Constructor for the interface. Subclasses should implement this method.
 
         __del__():
@@ -66,11 +66,11 @@ class Interface(ABC):
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
-        """Constructor for the interface.
+        r"""Constructor for the interface.
 
         Args:
-            \*args: Variable-length argument list.
-            \*\*kwargs: Arbitrary keyword arguments.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             None
