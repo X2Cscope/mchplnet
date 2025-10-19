@@ -26,7 +26,7 @@ class LNetSerial(Interface):
         serial (serial.Serial): The serial communication object.
 
     Methods:
-        __init__(*args, **kwargs):
+        __init__(\\*args, \\*\\*kwargs):
             Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         start():
@@ -52,8 +52,8 @@ class LNetSerial(Interface):
         """Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         Args:
-            *args: Variable-length argument list.
-            **kwargs: Arbitrary keyword arguments.
+            \*args: Variable-length argument list.
+            \*\*kwargs: Arbitrary keyword arguments.
 
         Keyword Args:
             port (str, optional): Serial port name. Defaults to "COM1".

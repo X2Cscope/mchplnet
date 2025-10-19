@@ -9,7 +9,8 @@ from mchplnet.services.frame_getram import FrameGetRam
 from mchplnet.services.frame_load_parameter import FrameLoadParameter, LoadScopeData
 from mchplnet.services.frame_putram import FramePutRam
 from mchplnet.services.frame_reboot import FrameReboot
-from mchplnet.services.frame_save_parameter import FrameSaveParameter, ScopeSetup
+from mchplnet.services.frame_save_parameter import FrameSaveParameter
+from mchplnet.services.scope import ScopeSetup
 
 
 class LNet:

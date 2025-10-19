@@ -30,8 +30,8 @@ class InterfaceFactory:
 
         Args:
             interface_type (InterfaceType): The type of interface to create.
-            *args: Variable length argument list passed to the interface constructor.
-            **kwargs: Arbitrary keyword arguments passed to the interface constructor.
+            \*args: Variable length argument list passed to the interface constructor.
+            \*\*kwargs: Arbitrary keyword arguments passed to the interface constructor.
 
         Returns:
             Interface: An instance of the requested interface type.

@@ -14,7 +14,7 @@ class Interface(ABC):
         None
 
     Methods:
-        __init__(*args, **kwargs):
+        __init__(\*args, \*\*kwargs):
             Constructor for the interface. Subclasses should implement this method.
 
         __del__():
@@ -35,26 +35,33 @@ class Interface(ABC):
         is_open() -> bool:
             Check if the interface is open and operational. Subclasses should implement this method.
 
-    Examples:
-        # Define a concrete interface class that implements Interface
-        class SerialInterface(Interface):
-            def __init__(self, port, baud_rate):
-                # Constructor implementation here
+    Example:
+        Define a concrete interface class that implements Interface::
 
-            def write(self, data):
-                # Write data implementation here
+            class SerialInterface(Interface):
+                def __init__(self, port, baud_rate):
+                    # Constructor implementation here
+                    pass
 
-            def read(self):
-                # Read data implementation here
+                def write(self, data):
+                    # Write data implementation here
+                    pass
 
-            def start(self):
-                # Start implementation here
+                def read(self):
+                    # Read data implementation here
+                    pass
 
-            def stop(self):
-                # Stop implementation here
+                def start(self):
+                    # Start implementation here
+                    pass
 
-            def is_open(self):
-                # is_open implementation here
+                def stop(self):
+                    # Stop implementation here
+                    pass
+
+                def is_open(self):
+                    # is_open implementation here
+                    return True
     """
 
     @abstractmethod
@@ -62,8 +69,8 @@ class Interface(ABC):
         """Constructor for the interface.
 
         Args:
-            *args: Variable-length argument list.
-            **kwargs: Arbitrary keyword arguments.
+            \*args: Variable-length argument list.
+            \*\*kwargs: Arbitrary keyword arguments.
 
         Returns:
             None
