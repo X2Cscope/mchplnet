@@ -1,8 +1,8 @@
 """Scope classes needed to implement scope functionality being called under frame_save_parameter."""
 
+import struct
 from dataclasses import dataclass
 from typing import Dict
-import struct
 
 # Scope configuration constants
 MAX_SCOPE_CHANNELS = 8  # Maximum number of channels allowed in scope configuration

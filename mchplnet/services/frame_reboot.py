@@ -1,8 +1,6 @@
 """Frame implementation for device reboot functionality."""
 
-from mchplnet.lnetframe import LNetFrame
-
-class FrameReboot(LNetFrame):
+from mchplnet.lnetframe import LNetFrameclass FrameReboot(LNetFrame):
     """Custom frame for device information retrieval and interpretation. Inherits from LNetFrame."""
 
     def __init__(self):

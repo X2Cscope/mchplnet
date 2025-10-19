@@ -9,8 +9,8 @@ import time
 import unittest
 from unittest.mock import Mock
 
-from mchplnet.lnet import LNet
 from mchplnet.interfaces.abstract_interface import Interface
+from mchplnet.lnet import LNet
 
 
 class MockInterface(Interface):

@@ -3,8 +3,8 @@
 This module contains tests for the abstract interface and its concrete implementations.
 """
 
-import unittest
 import time
+import unittest
 from unittest.mock import patch
 
 import serial
