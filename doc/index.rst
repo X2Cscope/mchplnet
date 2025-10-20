@@ -137,6 +137,9 @@ To contribute to mchplnet development:
    # Build documentation
    sphinx-build -M html doc build -Wan --keep-going
 
+   # Install pre-commit hooks
+   pre-commit install
+
 Indices and tables
 ==================
 

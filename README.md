@@ -47,6 +47,29 @@ If you discover a bug or have an idea for an improvement, we encourage you to co
 
 We appreciate your contribution!
 
+## Development Setup
+
+To set up the development environment:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/X2Cscope/mchplnet.git
+   cd mchplnet
+   ```
+
+2. Install development dependencies:
+   ```bash
+   pip install -r requirements.txt
+   pip install -r quality.txt
+   ```
+
+3. Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
+4. The pre-commit hook will now run automatically on each commit to ensure code quality and version consistency.
+
 
 
 -------------------------------------------------------------------

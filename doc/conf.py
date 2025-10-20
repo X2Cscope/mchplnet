@@ -40,6 +40,7 @@ extensions = [
 
 autoapi_dirs = ["../mchplnet"]
 autoapi_ignore = [
+    "scripts/*"
 ]
 
 suppress_warnings = [
