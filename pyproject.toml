@@ -13,6 +13,9 @@ authors = [
   "Mark Wendler",
 ]
 
+[tool.poetry.scripts]
+update-version = "scripts.update_version:update_version"
+
 readme = "README.md"
 packages = [{include = "mchplnet"}]
 
