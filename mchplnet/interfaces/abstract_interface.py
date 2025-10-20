@@ -1,8 +1,10 @@
+"""Abstract base class defining the interface contract for LNet communication."""
+
 from abc import ABC, abstractmethod
 
 
-class InterfaceABC(ABC):
-    """An abstract base class defining the interface for a generic interface.
+class Interface(ABC):
+    r"""An abstract base class defining the interface for a generic interface.
 
     This abstract base class (ABC) defines the methods and attributes that must be implemented by
     concrete interface classes. It serves as a blueprint for creating interface classes for various
@@ -12,7 +14,7 @@ class InterfaceABC(ABC):
         None
 
     Methods:
-        __init__(*args, **kwargs):
+        __init__(\\*args, \\*\\*kwargs):
             Constructor for the interface. Subclasses should implement this method.
 
         __del__():
@@ -33,31 +35,38 @@ class InterfaceABC(ABC):
         is_open() -> bool:
             Check if the interface is open and operational. Subclasses should implement this method.
 
-    Examples:
-        # Define a concrete interface class that implements InterfaceABC
-        class SerialInterface(InterfaceABC):
-            def __init__(self, port, baud_rate):
-                # Constructor implementation here
+    Example:
+        Define a concrete interface class that implements Interface::
 
-            def write(self, data):
-                # Write data implementation here
+            class SerialInterface(Interface):
+                def __init__(self, port, baud_rate):
+                    # Constructor implementation here
+                    pass
 
-            def read(self):
-                # Read data implementation here
+                def write(self, data):
+                    # Write data implementation here
+                    pass
 
-            def start(self):
-                # Start implementation here
+                def read(self):
+                    # Read data implementation here
+                    pass
 
-            def stop(self):
-                # Stop implementation here
+                def start(self):
+                    # Start implementation here
+                    pass
 
-            def is_open(self):
-                # is_open implementation here
+                def stop(self):
+                    # Stop implementation here
+                    pass
+
+                def is_open(self):
+                    # is_open implementation here
+                    return True
     """
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
-        """Constructor for the interface.
+        r"""Constructor for the interface.
 
         Args:
             *args: Variable-length argument list.

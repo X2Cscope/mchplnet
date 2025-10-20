@@ -1,8 +1,11 @@
 """Scope classes needed to implement scope functionality being called under frame_save_parameter."""
 
+import struct
 from dataclasses import dataclass
 from typing import Dict
-import struct
+
+# Scope configuration constants
+MAX_SCOPE_CHANNELS = 8  # Maximum number of channels allowed in scope configuration
 
 @dataclass
 class ScopeChannel:
@@ -96,7 +99,7 @@ class ScopeSetup:
             int: The total number of channels after addition or -1 if the limit is exceeded. Max allowed channels are 8.
         """
         if channel.name not in self.channels:
-            if len(self.channels) > 8:
+            if len(self.channels) > MAX_SCOPE_CHANNELS:
                 return -1
             self.channels[channel.name] = channel
         if trigger:
@@ -166,10 +169,11 @@ class ScopeSetup:
                 return struct.pack('<f', self.scope_trigger.trigger_level)
             else:
                 # Assume it is an integer and use to_bytes
+                
                 return self.scope_trigger.trigger_level.to_bytes(
                     self.scope_trigger.channel.data_type_size,
                     byteorder="little",
-                    signed=True,
+                    signed=self.scope_trigger.channel.is_signed
                 )
         else:
             return bytes(2)
@@ -180,7 +184,8 @@ class ScopeSetup:
         Returns:
             int: The total size of the dataset.
         """
-        return sum(channel.data_type_size for channel in self.channels.values())
+        size = sum(channel.data_type_size for channel in self.channels.values())
+        return size if size > 0 else 1
 
     def _trigger_delay_to_bytes(self):
         """Convert user defined trigger delay to a byte array.

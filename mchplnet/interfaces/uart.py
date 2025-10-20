@@ -1,14 +1,21 @@
+"""UART/Serial interface implementation for LNet protocol."""
+
 import logging
+import warnings
 
 import serial
 
-from mchplnet.interfaces.abstract_interface import InterfaceABC
+from mchplnet.interfaces.abstract_interface import Interface
+from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
+
+# LNet frame counter positions
+FRAME_COUNTER_SIZE_POSITION = 3  # Position in frame counter when SIZE field is read
 
 
-class LNetSerial(InterfaceABC):
-    """A class representing a serial communication interface for the LNet framework.
+class LNetSerial(Interface):
+    r"""A class representing a serial communication interface for the LNet framework.
 
-    This class implements the InterfaceABC interface for serial communication.
+    This class implements the Interface interface for serial communication.
 
     Attributes:
         com_port (str): The serial port name.
@@ -19,7 +26,7 @@ class LNetSerial(InterfaceABC):
         serial (serial.Serial): The serial communication object.
 
     Methods:
-        __init__(*args, **kwargs):
+        __init__(\\*args, \\*\\*kwargs):
             Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         start():
@@ -42,14 +49,14 @@ class LNetSerial(InterfaceABC):
     """
 
     def __init__(self, *args, **kwargs):
-        """Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
+        r"""Constructor for the LNetSerial class. Initializes serial communication with the provided settings.
 
         Args:
             *args: Variable-length argument list.
             **kwargs: Arbitrary keyword arguments.
 
         Keyword Args:
-            port (str, optional): Serial port name. Defaults to "COM11".
+            port (str, optional): Serial port name. Defaults to "COM1".
             baud_rate (int, optional): Baud rate (bits per second). Defaults to 115200.
             parity (int, optional): Parity setting. Defaults to 0.
             stop_bit (int, optional): Number of stop bits. Defaults to 1.
@@ -58,7 +65,9 @@ class LNetSerial(InterfaceABC):
         Returns:
             None
         """
-        self.com_port = kwargs["port"] if "port" in kwargs else "COM11"
+        if "port" not in kwargs:
+            warnings.warn("No port provided, using default COM1", Warning)
+        self.com_port = kwargs["port"] if "port" in kwargs else "COM1"
         self.baud_rate = kwargs["baud_rate"] if "baud_rate" in kwargs else 115200
         self.parity = kwargs["parity"] if "parity" in kwargs else 0
         self.stop_bit = kwargs["stop_bit"] if "stop_bit" in kwargs else 1
@@ -132,8 +141,6 @@ class LNetSerial(InterfaceABC):
         """
         if self.serial:
             self.serial.close()
-        else:
-            return
 
     def write(self, data):
         """Write data to the serial port.
@@ -146,8 +153,6 @@ class LNetSerial(InterfaceABC):
         """
         if self.serial:
             self.serial.write(data)
-        else:
-            return
 
     def is_open(self) -> bool:
         """Check if the serial port is open and operational.
@@ -158,9 +163,14 @@ class LNetSerial(InterfaceABC):
         Returns:
             bool: True if the serial port is open, False otherwise.
         """
-        return self.serial.is_open
+        return self.serial.is_open if self.serial else False
 
     def read(self):
+        """Read data from the serial port with LNet protocol framing.
+
+        Returns:
+            bytearray: The data read from the serial port.
+        """
         response_list = bytearray()
         if self.serial:
             counter = 0
@@ -171,8 +181,8 @@ class LNetSerial(InterfaceABC):
                 counter += 1
                 if counter == 1:
                     pass
-                elif counter == 3:
+                elif counter == FRAME_COUNTER_SIZE_POSITION:
                     read_size = response_list[1] + read_size
-                elif byte == 0x55 or byte == 0x02:
+                elif byte in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
                     read_size += 1
         return response_list
