@@ -23,11 +23,21 @@ def update_version():
 
     # Update __init__.py
     init_content = init_path.read_text(encoding="utf-8")
+
+    # Update version in docstring
+    init_content = re.sub(
+        r'Version:\s*\d+\.\d+\.\d+',
+        f'Version: {version}',
+        init_content
+    )
+
+    # Update __version__ variable
     init_content = re.sub(
         r'__version__\s*=\s*["\'].+["\']',
         f'__version__ = "{version}"',
         init_content
     )
+
     init_path.write_text(init_content, encoding="utf-8")
     print(f"Updated version to {version} in {init_path}")
 
