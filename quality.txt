@@ -1,0 +1,14 @@
+poetry==1.7.1
+sphinx==7.2.6
+sphinx-autoapi==3.0.0
+myst-parser==2.0.0
+sphinx-rtd-theme==2.0.0
+pre-commit==4.3.0
+pylint==3.1.0
+pytest==8.1.1
+pytest-mock==3.14.0
+requests==2.31.0
+ruff==0.4.4
+furo==2024.1.29
+pyinstaller>=6.11.0
+setuptools >= 75.0.0
