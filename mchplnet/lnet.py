@@ -33,6 +33,7 @@ class LNet:
         self.scope_setup = ScopeSetup()
         self._lock = threading.Lock()
         if handshake:
+            self.interface.start()
             self._handshake()
 
     def _handshake(self):

@@ -73,7 +73,6 @@ class LNetSerial(Interface):
         self.stop_bit = kwargs["stop_bit"] if "stop_bit" in kwargs else 1
         self.data_bits = kwargs["data_bits"] if "data_bits" in kwargs else 8
         self.serial = None
-        self.start()
 
     def start(self):
         """Set up the serial communication with the provided settings.
