@@ -7,8 +7,10 @@ from abc import ABC, abstractmethod
 LNET_SYN_BYTE = 0x55  # Frame synchronization byte
 LNET_FILL_BYTE_1 = 0x55  # First fill byte marker
 LNET_FILL_BYTE_2 = 0x02  # Second fill byte marker
-LNET_SYN_BYTE_DECIMAL = 85  # SYN byte in decimal
-LNET_FILL_BYTE_2_DECIMAL = 2  # Fill byte 2 in decimal
+LNET_SYN_BYTE_DECIMAL = 85  # SYN byte in decimal (0x55)
+
+# LNet frame counter positions
+LNET_FRAME_SIZE_IDX = 3  # Position in frame counter when SIZE field is read
 
 
 class LNetFrame(ABC):
@@ -75,7 +77,6 @@ class LNetFrame(ABC):
         self.__syn = LNET_SYN_BYTE_DECIMAL
         self.__node = 1
         self.data = []  # data
-        self.crc = None
 
     @abstractmethod
     def _get_data(self):
@@ -101,7 +102,8 @@ class LNetFrame(ABC):
         self._add_fill_byte()
         return bytearray(self.data)
 
-    def _crc_checksum(self, list_crc):
+    @staticmethod
+    def _crc_checksum(list_crc):
         """Calculate a checksum from the contents of a list.
 
         Args:
@@ -111,23 +113,10 @@ class LNetFrame(ABC):
             int: Calculated CRC.
         """
         sum_of_frame_data = sum(list_crc)  # Summing the list (int)
+        crc = sum_of_frame_data % 256  # Calculate modulo
+        logging.debug("Checksum: {}".format(crc))
 
-        crc_calculation = sum_of_frame_data % 256  # Calculate modulo
-
-        logging.debug("Checksum: {}".format(crc_calculation))
-
-        # Checksum 0x55 == 0xAA   85 == 170
-        # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
-        if crc_calculation == LNET_SYN_BYTE_DECIMAL:
-            crc_calculation = 170
-        elif crc_calculation == LNET_FILL_BYTE_2_DECIMAL:
-            crc_calculation = 253
-
-        self.crc = crc_calculation  # Add the hex checksum to the list of the data
-
-        logging.debug("Calculated CRC for the frame: {}  Based on: {}".format(self.crc, list_crc))
-
-        return self.crc
+        return crc
 
     def _add_fill_byte(self):
         """Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
@@ -140,6 +129,12 @@ class LNetFrame(ABC):
             if self.data[i] in (LNET_FILL_BYTE_2, LNET_FILL_BYTE_1):
                 self.data.insert(i + 1, 0x00)
             i += 1
+
+        # Checksum 0x55 == 0xAA   85 == 170 (INVERTED)
+        # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
+        checksum = self.data[-1]
+        if checksum in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+            self.data[-1] = ~checksum
 
     def frame_integrity(self) -> bool:
         """Check the integrity of the received frame by verifying the CRC.
@@ -177,6 +172,12 @@ class LNetFrame(ABC):
             if self.received[z] in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
                 self.received.pop(z + 1)
             z += 1
+
+        # Checksum 0x55 == 0xAA   85 == 170 (INVERTED)
+        # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
+        checksum = ~self.received[-1]
+        if checksum in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+            self.received[-1] = checksum
 
     def deserialize(self):
         """Save the parameters and check for errors in the response frame.

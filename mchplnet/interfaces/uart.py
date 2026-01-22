@@ -6,10 +6,7 @@ import warnings
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
-
-# LNet frame counter positions
-FRAME_COUNTER_SIZE_POSITION = 3  # Position in frame counter when SIZE field is read
+from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2, LNET_FRAME_SIZE_IDX
 
 
 class LNetSerial(Interface):
@@ -180,7 +177,7 @@ class LNetSerial(Interface):
                 counter += 1
                 if counter == 1:
                     pass
-                elif counter == FRAME_COUNTER_SIZE_POSITION:
+                elif counter == LNET_FRAME_SIZE_IDX:
                     read_size = response_list[1] + read_size
                 elif byte in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
                     read_size += 1

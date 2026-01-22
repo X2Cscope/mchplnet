@@ -47,6 +47,7 @@ class LNet:
             self.load_parameters()
         except Exception as e:
             logging.error(e)
+            self.interface.stop()
             raise RuntimeError("Failed to retrieve device information.")
 
     def get_device_info(self) -> DeviceInfo:
