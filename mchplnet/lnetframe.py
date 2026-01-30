@@ -98,43 +98,33 @@ class LNetFrame(ABC):
         self._get_data()  # Get data from the subclass (actual service)
         frame_size = len(self.data)  # Get the length of the data frame
         self.data[:0] = [self.__syn, frame_size, self.__node]  # prepend frame bytes
-        self.data.append(self._crc_checksum(self.data))
-        self._add_fill_byte()
+        self._add_fill_byte_and_crc()
         return bytearray(self.data)
 
-    @staticmethod
-    def _crc_checksum(list_crc):
-        """Calculate a checksum from the contents of a list.
-
-        Args:
-            list_crc (list): List of integers to calculate the CRC from.
-
-        Returns:
-            int: Calculated CRC.
-        """
-        sum_of_frame_data = sum(list_crc)  # Summing the list (int)
-        crc = sum_of_frame_data % 256  # Calculate modulo
-        logging.debug("Checksum: {}".format(crc))
-
-        return crc
-
-    def _add_fill_byte(self):
+    def _add_fill_byte_and_crc(self):
         """Handle reserved key values 0x55 and 0x02 in SIZE, NODE, or DATA areas.
 
         If any of these key values occur within SIZE, NODE, or DATA area, a 0x00 'fill_bytes'
         will be added, which will not be counted as data size and not be used in checksum calculation.
         """
-        i = 1
-        while i < len(self.data):
-            if self.data[i] in (LNET_FILL_BYTE_2, LNET_FILL_BYTE_1):
-                self.data.insert(i + 1, 0x00)
-            i += 1
+        result = [self.data[0]]
+        crc_sum = 0x55 # SYN
 
-        # Checksum 0x55 == 0xAA   85 == 170 (INVERTED)
-        # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
-        checksum = self.data[-1]
-        if checksum in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-            self.data[-1] = ~checksum
+        for byte_val in self.data[1:]:
+            result.append(byte_val)
+            crc_sum += byte_val
+            if byte_val in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+                result.append(0x00)  # Fill byte not counted in CRC
+
+        # Calculate and handle checksum inversion in one step
+        # Checksum 0x55 => 0xAA   85 => 170
+        # Checksum 0x02 => 0xFD   02 => 253
+        crc = crc_sum % 256
+        if crc in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+            crc = (~crc) & 0xFF
+        result.append(crc)
+
+        self.data = result
 
     def frame_integrity(self) -> bool:
         """Check the integrity of the received frame by verifying the CRC.
@@ -142,10 +132,35 @@ class LNetFrame(ABC):
         Returns:
             bool: True if the frame integrity check passes, False otherwise.
         """
-        if self._crc_checksum(self.received[:-1]) != self.received[-1]:
-            logging.error("CRC Checksum doesn't match: {}".format(self._crc_checksum(self.received)))
+        if len(self.received) < 2:  # Need at least data + CRC
             return False
-        return True
+
+        result = [self.received[0]]
+        skip_next = False
+        crc_sum = self.received[0]
+
+        # Store original CRC before processing
+        received_crc = self.received[-1]
+        if received_crc in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+            received_crc = (~received_crc) & 0xFF
+
+        # Remove fill bytes and calculate CRC in single pass (excluding last CRC byte)
+        for byte_val in self.received[1:-1]:
+            if skip_next:
+                skip_next = False
+                continue
+
+            result.append(byte_val)
+            crc_sum += byte_val
+
+            if byte_val in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
+                skip_next = True
+
+        # Update received data and check CRC
+        self.received = bytearray(result)
+        calculated_crc = crc_sum % 256
+
+        return calculated_crc == received_crc
 
     @abstractmethod
     def _deserialize(self):
@@ -165,27 +180,12 @@ class LNetFrame(ABC):
         logging.debug(self.get_error_id(self.received[4]))
         return self.received[3] == self.service_id and self.received[4] == 0
 
-    def _remove_fill_byte(self):
-        """Remove fill bytes (0x00) from the received frame."""
-        z = 1
-        while z < len(self.received):
-            if self.received[z] in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-                self.received.pop(z + 1)
-            z += 1
-
-        # Checksum 0x55 == 0xAA   85 == 170 (INVERTED)
-        # Checksum 0x02 == 0xFD   02 == 253 (INVERTED)
-        checksum = ~self.received[-1]
-        if checksum in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-            self.received[-1] = checksum
-
     def deserialize(self):
         """Save the parameters and check for errors in the response frame.
 
         Returns:
             None or object: Deserialized frame or None if there are errors.
         """
-        self._remove_fill_byte()
         if self.frame_integrity() and self._check_frame_protocol():
             return self._deserialize()
         logging.error("Error on frame integrity or frame not correct!")

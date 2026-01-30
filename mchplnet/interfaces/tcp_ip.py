@@ -38,26 +38,15 @@ class LNetTcpIp(Interface):
 
     def read(self):
         """Read data from the TCP/IP interface."""
-        data = bytearray()
-        # try:
-        #     while True:
-        #         chunk = self.socket.recv(1024)
-        #         print("chunk read:", len(chunk))
-        #         if not chunk:  # Connection closed
-        #             break
-        #         data.extend(chunk)
-        # except socket.timeout:
-        #     pass  # No more data available
-        # return data
 
         # Read initial 4 bytes (SYN, SIZE, NODE, SERVICE_ID)
         counter = 0
         read_size = 4
+        data = bytearray(512)
         while counter < read_size:
             chunk = self.socket.recv(1024)
-            print("chunk read:", len(chunk))
             for byte in chunk:
-                data.append(byte)
+                data[counter] = byte
                 counter += 1
                 if counter == 1:
                     pass
@@ -65,4 +54,4 @@ class LNetTcpIp(Interface):
                     read_size = data[1] + read_size
                 elif byte in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
                     read_size += 1
-        return data
+        return data[:counter]
