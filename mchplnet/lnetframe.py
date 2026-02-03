@@ -187,9 +187,8 @@ class LNetFrame(ABC):
             None or object: Deserialized frame or None if there are errors.
         """
         if self.frame_integrity() and self._check_frame_protocol():
-            return self._deserialize()
-        logging.error("Error on frame integrity or frame not correct!")
-        return None
+            logging.error("Error on frame integrity or frame not correct!")
+        return self._deserialize()
 
     @staticmethod
     def get_error_id(error_id: int):
