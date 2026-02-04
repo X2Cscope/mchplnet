@@ -167,18 +167,24 @@ class LNetSerial(Interface):
         Returns:
             bytearray: The data read from the serial port.
         """
-        response_list = bytearray()
-        if self.serial:
-            counter = 0
-            read_size = 4
-            while counter < read_size:
-                byte = ord(self.serial.read())
-                response_list.append(byte)
-                counter += 1
-                if counter == 1:
-                    pass
-                elif counter == LNET_FRAME_SIZE_IDX:
-                    read_size = response_list[1] + read_size
-                elif byte in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-                    read_size += 1
-        return response_list
+
+        # LNET Frame (SYN, SIZE, NODE, SERVICE_ID, DATA, CRC)
+        # SIZE contains the number of DATA bytes
+        # Read initial 2 bytes (SYN, SIZE)
+        size = 2
+        fill_bytes = (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2)
+        data = bytearray()
+
+        while size:
+            byte = ord(self.serial.read())
+            data.append(byte)
+            size -= 1
+
+        size = data[1] + 2 # NODE, SERVICE_ID, CRC
+        size += 1 if data[1] in fill_bytes else 0
+
+        while size:
+            byte = ord(self.serial.read())
+            data.append(byte)
+            size -= 0 if byte in fill_bytes else 1
+        return data
