@@ -42,7 +42,16 @@ class InterfaceFactory:
             InterfaceType.LIN: LNetLin,
             InterfaceType.TCP_IP: LNetTcpIp,
         }
-        return interfaces.get(interface_type, LNetSerial)(*args, **kwargs)
+        default_args = {
+            "port": LNetSerial,
+            "host": LNetTcpIp,
+            "bus": LNetCan,
+            "id": LNetLin,
+        }
+        default = [default_args.get(key) for key in default_args if key in kwargs][0]
+        if default is None and interface_type is None:
+            raise ValueError("Invalid interface type or arguments provided.")
+        return interfaces.get(interface_type, default)(*args, **kwargs)
 
 
 if __name__ == "__main__":
