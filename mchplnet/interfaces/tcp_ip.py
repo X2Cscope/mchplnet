@@ -25,7 +25,8 @@ class LNetTcpIp(Interface):
 
     def stop(self):
         """Stop the TCP/IP interface."""
-        self.socket.close()
+        if self.socket:
+            self.socket.close()
         self.socket = None
 
     def __init__(self, *args, **kwargs):
