@@ -123,7 +123,6 @@ class LNetFrame(ABC):
         if crc in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
             crc = (~crc) & 0xFF
         result.append(crc)
-
         self.data = result
 
     def frame_integrity(self) -> bool:
@@ -135,32 +134,27 @@ class LNetFrame(ABC):
         if len(self.received) < 2:  # Need at least data + CRC
             return False
 
-        result = [self.received[0]]
-        skip_next = False
-        crc_sum = self.received[0]
-
-        # Store original CRC before processing
-        received_crc = self.received[-1]
-        if received_crc in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-            received_crc = (~received_crc) & 0xFF
-
-        # Remove fill bytes and calculate CRC in single pass (excluding last CRC byte)
-        for byte_val in self.received[1:-1]:
-            if skip_next:
-                skip_next = False
-                continue
-
+        received = self.received
+        fill_bytes = (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2)
+        result = [received[0]]
+        crc_sum = received[0]
+        i = 1
+        while i < len(received) - 1:
+            byte_val = received[i]
             result.append(byte_val)
             crc_sum += byte_val
+            if byte_val in fill_bytes:
+                i += 2  # Skip the next byte
+            else:
+                i += 1
 
-            if byte_val in (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2):
-                skip_next = True
-
-        # Update received data and check CRC
-        self.received = bytearray(result)
         calculated_crc = crc_sum % 256
+        if calculated_crc in fill_bytes:
+            calculated_crc = (~calculated_crc) & 0xFF
 
-        return calculated_crc == received_crc
+        crc_error = calculated_crc != received[-1]
+        self.received = bytearray(result)
+        return crc_error
 
     @abstractmethod
     def _deserialize(self):
