@@ -33,6 +33,7 @@ class LNet:
         self.scope_setup = ScopeSetup()
         self._lock = threading.Lock()
         if handshake:
+            self.interface.start()
             self._handshake()
 
     def _handshake(self):
@@ -42,10 +43,12 @@ class LNet:
             RuntimeError: If unable to retrieve device information successfully.
         """
         try:
-            self.get_device_info()
+            if self.get_device_info() is None:
+                raise RuntimeError("Could not read DeviceInfo. Communication channel is available?")
             self.load_parameters()
         except Exception as e:
             logging.error(e)
+            self.interface.stop()
             raise RuntimeError("Failed to retrieve device information.")
 
     def get_device_info(self) -> DeviceInfo:
@@ -66,20 +69,10 @@ class LNet:
         Returns:
             DeviceInfo: The device information retrieved from the microcontroller.
         """
-        self._check_device_info()
         reboot_device = FrameReboot()
         print(reboot_device.serialize())
         reboot_device.received = self._xchg_data(reboot_device.serialize())
         return reboot_device.received
-
-    def _check_device_info(self):
-        """Check if the device information is initialized.
-
-        Raises:
-            RuntimeError: If the device information has not been initialized.
-        """
-        if self.device_info is None:
-            raise RuntimeError("DeviceInfo is not initialized. Call get_device_info() first.")
 
     def save_parameter(self):
         """Save the current scope configuration parameters to the microcontroller.
@@ -90,7 +83,6 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before saving parameters.
         """
-        self._check_device_info()
         frame_save_param = FrameSaveParameter()
         frame_save_param.set_scope_setup(self.scope_setup)
         frame_save_param.received = self._xchg_data(frame_save_param.serialize())
@@ -105,7 +97,6 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before loading parameters.
         """
-        self._check_device_info()
         frame_load_param = FrameLoadParameter()
         frame_load_param.received = self._xchg_data(frame_load_param.serialize())
         self.scope_data = frame_load_param.deserialize()
@@ -125,7 +116,6 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
-        self._check_device_info()
         get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
         get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
@@ -143,7 +133,6 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
-        self._check_device_info()
         get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
         get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
         return get_ram_frame.deserialize()
@@ -162,7 +151,6 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before writing to RAM.
         """
-        self._check_device_info()
         put_ram_frame = FramePutRam(address, size, self.device_info.uc_width, value)
         put_ram_frame.received = self._xchg_data(put_ram_frame.serialize())
         return put_ram_frame.deserialize()
@@ -179,8 +167,15 @@ class LNet:
             The response from the microcontroller.
         """
         with self._lock:
-            self.interface.write(frame)
-            return self.interface.read()
+            try:
+                self.interface.write(frame)
+                return self.interface.read()
+            except TimeoutError:
+                self.interface.stop()
+                self.interface.start()
+                self.interface.write(frame)
+                return self.interface.read()
+
 
     def get_scope_setup(self) -> ScopeSetup:
         """Get the current scope setup.

@@ -10,6 +10,7 @@ from unittest.mock import patch
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
+from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
 
 
@@ -195,6 +196,7 @@ class TestInterfaceErrorHandling(unittest.TestCase):
         with patch('serial.Serial') as mock_serial:
             mock_serial.return_value.read.side_effect = serial.SerialTimeoutException("Timeout")
             interface = LNetSerial(port="COM1")
+            interface.start()
             with self.assertRaises(IOError):
                 interface.read()
 
@@ -203,17 +205,16 @@ class TestInterfaceErrorHandling(unittest.TestCase):
         with patch('serial.Serial') as mock_serial:
             mock_serial.return_value.write.side_effect = serial.SerialException("Write failed")
             interface = LNetSerial(port="COM1")
+            interface.start()
             with self.assertRaises(IOError):
                 interface.write(b"test")
 
-    # def test_tcp_connection_error(self):
-    #     """Test TCP/IP connection error handling."""
-    #     with patch('socket.socket') as mock_socket:
-    #         mock_socket.return_value.connect.side_effect = ConnectionRefusedError("Connection refused")
-    #         with self.assertRaises(ConnectionError):
-    #             LNetTcpIp(host="invalid.host", port=1234)
-
-
+    def test_tcp_connection_error(self):
+        """Test TCP/IP connection error handling."""
+        with patch('socket.socket') as mock_socket:
+            mock_socket.return_value.connect.side_effect = ConnectionRefusedError("Connection refused")
+            with self.assertRaises(ConnectionError):
+                LNetTcpIp(host="invalid.host").start()
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
