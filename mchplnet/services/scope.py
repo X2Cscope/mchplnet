@@ -164,17 +164,15 @@ class ScopeSetup:
             bytearray: The trigger level in byte format.
         """
         if self.scope_trigger.channel:
-            if isinstance(self.scope_trigger.trigger_level, float):
-                # Convert float to bytes using struct
-                return struct.pack('<f', self.scope_trigger.trigger_level)
-            else:
-                # Assume it is an integer and use to_bytes
-                
-                return self.scope_trigger.trigger_level.to_bytes(
+            if self.scope_trigger.channel.is_integer:
+                return int(self.scope_trigger.trigger_level).to_bytes(
                     self.scope_trigger.channel.data_type_size,
                     byteorder="little",
                     signed=self.scope_trigger.channel.is_signed
                 )
+            else:
+                # Convert float to bytes using struct
+                return struct.pack('<f', self.scope_trigger.trigger_level)
         else:
             return bytes(2)
 
@@ -255,10 +253,10 @@ class ScopeSetup:
         """
         ret = 0x80  # Bit 7 is always set because of "New Scope Version"
         if self.scope_trigger.channel:
-            ret += 0x20 if self.scope_trigger.channel.is_signed else 0
-            ret += 0x00 if self.scope_trigger.channel.is_integer else 0x10
-            ret += self.scope_trigger.channel.data_type_size  # ._get_width()
+            ret += 0x00 if self.scope_trigger.channel.is_integer else 0x40
+            ret += 0x20 if self.scope_trigger.channel.is_signed else 0x00
+            ret += self.scope_trigger.channel.data_type_size
         else:
-            ret += 2  # ._get_width()
+            ret += 2
 
         return ret
