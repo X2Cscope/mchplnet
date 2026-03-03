@@ -8,7 +8,6 @@ from enum import Enum
 
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.interfaces.can import LNetCan
-from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
 
@@ -39,14 +38,12 @@ class InterfaceFactory:
         interfaces = {
             InterfaceType.SERIAL: LNetSerial,
             InterfaceType.CAN: LNetCan,
-            InterfaceType.LIN: LNetLin,
             InterfaceType.TCP_IP: LNetTcpIp,
         }
         default_args = {
             "port": LNetSerial,
             "host": LNetTcpIp,
             "bus": LNetCan,
-            "id": LNetLin,
         }
         default = [default_args.get(key) for key in default_args if key in kwargs][0]
         if default is None and interface_type is None:

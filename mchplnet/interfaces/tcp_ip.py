@@ -31,7 +31,7 @@ class LNetTcpIp(Interface):
 
     def __init__(self, *args, **kwargs):
         """Initialize the TCP/IP interface."""
-        self.port = int(kwargs["port"]) if "port" in kwargs else 12666
+        self.port = int(kwargs["tcp_port"]) if "tcp_port" in kwargs else 12666
         self.host = kwargs["host"] if "host" in kwargs else "localhost"
         self.timeout = kwargs["timeout"] if "timeout" in kwargs else 0.1
         self.socket = None
