@@ -2,7 +2,6 @@
 
 import logging
 import threading
-import time
 
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo

@@ -11,6 +11,7 @@ LNET_SYN_BYTE_DECIMAL = 85  # SYN byte in decimal (0x55)
 
 # LNet frame counter positions
 LNET_FRAME_SIZE_IDX = 3  # Position in frame counter when SIZE field is read
+LNET_MIN_FRAME_LENGTH = 2  # Minimum frame length (data + CRC)
 
 
 class LNetFrame(ABC):
@@ -131,7 +132,7 @@ class LNetFrame(ABC):
         Returns:
             bool: True if the frame integrity check passes, False otherwise.
         """
-        if len(self.received) < 2:  # Need at least data + CRC
+        if len(self.received) < LNET_MIN_FRAME_LENGTH:  # Need at least data + CRC
             return False
 
         received = self.received

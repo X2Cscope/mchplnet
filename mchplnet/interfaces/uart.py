@@ -6,7 +6,7 @@ import warnings
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2, LNET_FRAME_SIZE_IDX
+from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
 
 
 class LNetSerial(Interface):
@@ -167,7 +167,6 @@ class LNetSerial(Interface):
         Returns:
             bytearray: The data read from the serial port.
         """
-
         # LNET Frame (SYN, SIZE, NODE, SERVICE_ID, DATA, CRC)
         # SIZE contains the number of DATA bytes
         # Read initial 2 bytes (SYN, SIZE)

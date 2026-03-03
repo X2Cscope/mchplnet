@@ -1,8 +1,8 @@
-"""LNet TCP Server Example
+"""LNet TCP Server Example.
 
 This module implements a simple TCP server that simulates an LNet device
 for testing and development purposes. It responds to device info and
-parameter loading requests using the LNet protocol.
+parameter loading requests using the LNet protocol using the TCP/IP protocol.
 
 Usage:
     python tcp_server.py
@@ -12,6 +12,15 @@ requests from X2CScope clients.
 """
 
 import socket
+
+# LNet protocol constants
+LNET_START_BYTE = 0x55
+LNET_DEVICE_INFO_REQUEST_LENGTH = 5
+LNET_LOAD_PARAMETER_REQUEST_LENGTH = 7
+LNET_DEVICE_INFO_COMMAND = 0x01
+LNET_LOAD_PARAMETER_COMMAND = 0x03
+LNET_LOAD_PARAMETER_SUBCOMMAND = 0x11
+
 
 def calc_checksum(frame_bytes):
     """Calculate checksum for LNet frame.
@@ -47,7 +56,7 @@ def make_loadparameter_response():
     resp = bytearray(b'U\x1f\x01\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1e@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x88\x13\x00\x00\x88\x13\x00\x00\x82\x9c')
     return resp
 
-def is_deviceinfo_request(data, slave_id=0x01):
+def is_device_info_request(data, slave_id=0x01):
     """Check if received data is a device info request.
     
     Args:
@@ -58,14 +67,14 @@ def is_deviceinfo_request(data, slave_id=0x01):
         bool: True if this is a valid device info request
     """
     return (
-        len(data) == 5 and
-        data[0] == 0x55 and
-        data[1] == 0x01 and
+        len(data) == LNET_DEVICE_INFO_REQUEST_LENGTH and
+        data[0] == LNET_START_BYTE and
+        data[1] == LNET_DEVICE_INFO_COMMAND and
         data[2] == slave_id and
         data[3] == 0x00
     )
 
-def is_loadparameter_request(data, slave_id=0x01):
+def is_load_parameter_request(data, slave_id=0x01):
     """Check if received data is a load parameter request.
     
     Args:
@@ -76,11 +85,11 @@ def is_loadparameter_request(data, slave_id=0x01):
         bool: True if this is a valid load parameter request
     """
     return (
-        len(data) == 7 and
-        data[0] == 0x55 and
-        data[1] == 0x03 and
+        len(data) == LNET_LOAD_PARAMETER_REQUEST_LENGTH and
+        data[0] == LNET_START_BYTE and
+        data[1] == LNET_LOAD_PARAMETER_COMMAND and
         data[2] == slave_id and
-        data[3] == 0x11
+        data[3] == LNET_LOAD_PARAMETER_SUBCOMMAND
     )
 
 def run_server(port=12666, slave_id=0x01, device_id=0x8240):
@@ -106,10 +115,10 @@ def run_server(port=12666, slave_id=0x01, device_id=0x8240):
                     data = conn.recv(64)
                     if not data:
                         break
-                    if is_deviceinfo_request(data, slave_id):
+                    if is_device_info_request(data, slave_id):
                         resp = make_deviceinfo_response(slave_id, device_id)
                         conn.sendall(resp)
-                    elif is_loadparameter_request(data, slave_id):
+                    elif is_load_parameter_request(data, slave_id):
                         resp = make_loadparameter_response()
                         conn.sendall(resp)
                     else:

@@ -3,7 +3,7 @@ import logging
 import socket
 
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.lnetframe import LNET_FRAME_SIZE_IDX, LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
+from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
 
 
 class LNetTcpIp(Interface):
@@ -42,7 +42,6 @@ class LNetTcpIp(Interface):
 
     def read(self):
         """Read data from the TCP/IP interface."""
-
         # LNET Frame (SYN, SIZE, NODE, SERVICE_ID, DATA, CRC)
         # SIZE contains the number of DATA bytes
         # Read initial 2 bytes (SYN, SIZE)
