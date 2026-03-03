@@ -4,6 +4,7 @@ Usage: Ensures the proper configuration of the communication interface supported
 """
 
 import logging
+import warnings
 from enum import Enum
 
 from mchplnet.interfaces.abstract_interface import Interface
@@ -45,10 +46,11 @@ class InterfaceFactory:
             "host": LNetTcpIp,
             "bus": LNetCan,
         }
-        default = [default_args.get(key) for key in default_args if key in kwargs][0]
-        if default is None and interface_type is None:
-            raise ValueError("Invalid interface type or arguments provided.")
-        return interfaces.get(interface_type, default)(*args, **kwargs)
+        default = [default_args.get(key) for key in default_args if key in kwargs]
+        if len(default) == 0 and interface_type is None:
+            warnings.warn("No interface select, setting Serial as default.", Warning)
+            default = [LNetSerial]
+        return interfaces.get(interface_type, default[0])(*args, **kwargs)
 
 
 if __name__ == "__main__":
