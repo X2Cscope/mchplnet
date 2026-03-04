@@ -17,8 +17,7 @@ class InterfaceType(Enum):
     """Enumeration of supported interface types."""
     SERIAL = 1
     CAN = 2
-    LIN = 3
-    TCP_IP = 4
+    TCP_IP = 3
 
 
 class InterfaceFactory:
