@@ -4,11 +4,11 @@ Usage: Ensures the proper configuration of the communication interface supported
 """
 
 import logging
+import warnings
 from enum import Enum
 
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.interfaces.can import LNetCan
-from mchplnet.interfaces.lin import LNetLin
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
 
@@ -39,10 +39,18 @@ class InterfaceFactory:
         interfaces = {
             InterfaceType.SERIAL: LNetSerial,
             InterfaceType.CAN: LNetCan,
-            InterfaceType.LIN: LNetLin,
             InterfaceType.TCP_IP: LNetTcpIp,
         }
-        return interfaces.get(interface_type, LNetSerial)(*args, **kwargs)
+        default_args = {
+            "port": LNetSerial,
+            "host": LNetTcpIp,
+            "bus": LNetCan,
+        }
+        default = [default_args.get(key) for key in default_args if key in kwargs]
+        if len(default) == 0 and interface_type is None:
+            warnings.warn("No interface select, setting Serial as default.", Warning)
+            default = [LNetSerial]
+        return interfaces.get(interface_type, default[0])(*args, **kwargs)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Create an interface instance for communication with the microcontroller.
 # Here, we are using a serial interface with specified port and baud-rate.
-interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM4", baudrate=115200)
+interface = InterfaceFactory.get_interface(IType.TCP_IP, host="10.0.0.20")
 
 # LNet is responsible for managing low-level communication with the microcontroller.
 l_net = LNet(interface)
