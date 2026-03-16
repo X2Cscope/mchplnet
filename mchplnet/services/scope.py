@@ -68,12 +68,15 @@ class ScopeSetup:
     def __init__(self):
         """Initializes a new instance of the ScopeSetup class."""
         self.scope_state = 2
-        self.sample_time_factor = 1
+        self.sample_time_factor = 0
         self.channels: Dict[str, ScopeChannel] = {}
         self.scope_trigger = ScopeTrigger()
 
-    def set_sample_time_factor(self, sample_time_factor: int = 1):
-        """Set the sample time factor for the scope. Default is 1.
+    def set_sample_time_factor(self, sample_time_factor: int = 0):
+        """Set the sample time factor for the scope. Default is 0.
+
+        setting this value to 0 means to sample data at every Update function call.
+        Value 1 means to sample every 2nd step, value 2 to sample every 3rd step, etc.
 
         Args:
             sample_time_factor (int): The sample time factor to be set.
