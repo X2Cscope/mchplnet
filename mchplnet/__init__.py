@@ -1,6 +1,6 @@
 """This module contains the mchplnet package.
 
-Version: 0.4.2
+Version: 0.5.0
 """
 
-__version__ = "0.4.2"
+__version__ = "0.5.0"
