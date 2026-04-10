@@ -43,7 +43,7 @@ class InterfaceFactory:
         default_args = {
             "port": LNetSerial,
             "host": LNetTcpIp,
-            "bus": LNetCan,
+            "bustype": LNetCan,
         }
         default = [default_args.get(key) for key in default_args if key in kwargs]
         if len(default) == 0 and interface_type is None:

@@ -25,6 +25,7 @@ repository = "https://github.com/X2Cscope/mchplnet"
 [tool.poetry.dependencies]
 pyserial = "^3.5"
 python-socketio = "^5.16.1"
+python-can = "^4.6.1"
 
 [tool.setuptools.packages.find]
 exclude = ["test", "doc"]  # empty by default

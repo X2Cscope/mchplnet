@@ -5,13 +5,16 @@ This module contains tests for the abstract interface and its concrete implement
 
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.interfaces.tcp_ip import LNetTcpIp
 from mchplnet.interfaces.uart import LNetSerial
+
+# Import CAN interface
+from mchplnet.interfaces.can import LNetCan
 
 
 class TestInterface(unittest.TestCase):
@@ -215,6 +218,237 @@ class TestInterfaceErrorHandling(unittest.TestCase):
             mock_socket.return_value.connect.side_effect = ConnectionRefusedError("Connection refused")
             with self.assertRaises(ConnectionError):
                 LNetTcpIp(host="invalid.host").start()
+
+
+class TestCANInterface(unittest.TestCase):
+    """Test cases for the CAN interface implementation."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        # Mock the can.interface.Bus
+        self.mock_bus_patcher = patch('can.interface.Bus')
+        self.mock_bus = self.mock_bus_patcher.start()
+        self.mock_bus_instance = MagicMock()
+        self.mock_bus.return_value = self.mock_bus_instance
+        self.mock_bus_instance._is_shutdown = False
+
+    def tearDown(self):
+        """Tear down test fixtures."""
+        self.mock_bus_patcher.stop()
+
+    def test_can_initialization(self):
+        """Test CAN interface initialization."""
+        interface = LNetCan(
+            bustype='pcan_usb',
+            channel=1,
+            baudrate=500000,
+            can_id_tx=0x100,
+            can_id_rx=0x101
+        )
+        self.assertEqual(interface.bustype, 'pcan_usb')
+        self.assertEqual(interface.channel, 'PCAN_USBBUS1')
+        self.assertEqual(interface.bitrate, 500000)
+        self.assertEqual(interface.can_id_tx, 0x100)
+        self.assertEqual(interface.can_id_rx, 0x101)
+
+    def test_can_start(self):
+        """Test starting the CAN interface."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+        interface.start()
+        self.assertTrue(interface.is_open())
+        self.mock_bus.assert_called_once()
+
+    def test_can_stop(self):
+        """Test stopping the CAN interface."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+        interface.start()
+        interface.stop()
+        self.mock_bus_instance.shutdown.assert_called_once()
+
+    def test_can_write(self):
+        """Test writing data to CAN interface."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+        interface.start()
+
+        # Create test data
+        test_data = bytearray([0x55, 0x04, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
+
+        # Write data
+        interface.write(test_data)
+
+        # Verify that CAN messages were sent
+        self.assertTrue(self.mock_bus_instance.send.called)
+
+    def test_can_read(self):
+        """Test reading data from CAN interface."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, can_id_rx=0x101)
+        interface.start()
+
+        # Create mock CAN messages
+        mock_message = MagicMock()
+        mock_message.arbitration_id = 0x101
+        mock_message.data = bytearray([8, 0x55, 0x04, 0x01, 0x02, 0x03, 0x04])  # Length + data
+
+        # Second message with remaining data
+        mock_message2 = MagicMock()
+        mock_message2.arbitration_id = 0x101
+        mock_message2.data = bytearray([0x05, 0x06])
+
+        # Mock recv to return our test messages
+        self.mock_bus_instance.recv.side_effect = [mock_message, mock_message2, None]
+
+        # Read data
+        data = interface.read()
+
+        # Verify data was read
+        self.assertIsInstance(data, bytearray)
+        self.assertTrue(self.mock_bus_instance.recv.called)
+
+    def test_can_write_fragmentation(self):
+        """Test that large frames are fragmented correctly."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, can_id_tx=0x100)
+        interface.start()
+
+        # Create large test data (more than 7 bytes to force fragmentation)
+        test_data = bytearray(range(20))
+
+        # Write data
+        interface.write(test_data)
+
+        # Verify multiple CAN messages were sent
+        call_count = self.mock_bus_instance.send.call_count
+        self.assertGreater(call_count, 1, "Large data should be fragmented into multiple messages")
+
+    def test_can_default_parameters(self):
+        """Test CAN interface with default parameters (PCAN USB)."""
+        interface = LNetCan()
+        self.assertEqual(interface.bustype, 'pcan_usb')
+        self.assertEqual(interface.channel, 'PCAN_USBBUS1')
+        self.assertEqual(interface.bitrate, 500000)
+
+    def test_can_socketcan(self):
+        """Test CAN interface with SocketCAN."""
+        interface = LNetCan(bustype='socketcan', channel='can0')
+        self.assertEqual(interface.bustype, 'socketcan')
+        self.assertEqual(interface.channel, 'can0')
+
+    def test_can_error_handling(self):
+        """Test CAN interface error handling."""
+        self.mock_bus.side_effect = Exception("CAN initialization failed")
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+
+        with self.assertRaises(Exception):
+            interface.start()
+
+    def test_can_write_before_start(self):
+        """Test writing to CAN before starting."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+
+        with self.assertRaises(RuntimeError):
+            interface.write(bytearray([0x01, 0x02, 0x03]))
+
+    def test_can_read_before_start(self):
+        """Test reading from CAN before starting."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+
+        with self.assertRaises(RuntimeError):
+            interface.read()
+
+    def test_can_extra_config(self):
+        """Test that extra configuration is passed to python-can."""
+        interface = LNetCan(
+            bustype='pcan',
+            channel='PCAN_USBBUS1',
+            receive_own_messages=True,  # Extra config
+            fd=True  # Extra config
+        )
+        interface.start()
+
+        # Verify that extra config was passed
+        call_kwargs = self.mock_bus.call_args[1]
+        self.assertTrue('receive_own_messages' in call_kwargs)
+        self.assertTrue('fd' in call_kwargs)
+
+    def test_can_channel_conversion_pcan_usb(self):
+        """Test channel number conversion for PCAN USB."""
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+        self.assertEqual(interface.channel, 'PCAN_USBBUS1')
+
+        interface = LNetCan(bustype='pcan_usb', channel=2)
+        self.assertEqual(interface.channel, 'PCAN_USBBUS2')
+
+    def test_can_channel_conversion_pcan_lan(self):
+        """Test channel number conversion for PCAN LAN."""
+        interface = LNetCan(bustype='pcan_lan', channel=1)
+        self.assertEqual(interface.channel, 'PCAN_LANBUS1')
+
+        interface = LNetCan(bustype='pcan_lan', channel=2)
+        self.assertEqual(interface.channel, 'PCAN_LANBUS2')
+
+    def test_can_channel_conversion_socketcan(self):
+        """Test channel number conversion for SocketCAN (0-indexed)."""
+        interface = LNetCan(bustype='socketcan', channel=1)
+        self.assertEqual(interface.channel, 'can0')
+
+        interface = LNetCan(bustype='socketcan', channel=2)
+        self.assertEqual(interface.channel, 'can1')
+
+    def test_can_channel_conversion_vector(self):
+        """Test channel number conversion for Vector (0-indexed string)."""
+        interface = LNetCan(bustype='vector', channel=1)
+        self.assertEqual(interface.channel, '0')
+
+        interface = LNetCan(bustype='vector', channel=2)
+        self.assertEqual(interface.channel, '1')
+
+    def test_can_channel_conversion_kvaser(self):
+        """Test channel number conversion for Kvaser (0-indexed integer)."""
+        interface = LNetCan(bustype='kvaser', channel=1)
+        self.assertEqual(interface.channel, 0)
+
+        interface = LNetCan(bustype='kvaser', channel=2)
+        self.assertEqual(interface.channel, 1)
+
+    def test_can_bustype_mapping(self):
+        """Test that our bustype names are mapped to python-can's expected names."""
+        # Test pcan_usb -> pcan
+        interface = LNetCan(bustype='pcan_usb', channel=1)
+        interface.start()
+        call_kwargs = self.mock_bus.call_args[1]
+        self.assertEqual(call_kwargs['bustype'], 'pcan')
+
+        # Test pcan_lan -> pcan
+        interface = LNetCan(bustype='pcan_lan', channel=1)
+        interface.start()
+        call_kwargs = self.mock_bus.call_args[1]
+        self.assertEqual(call_kwargs['bustype'], 'pcan')
+
+    def test_can_mode_standard(self):
+        """Test standard CAN ID mode (11-bit)."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, mode='standard')
+        self.assertFalse(interface.is_extended_id)
+
+    def test_can_mode_extended(self):
+        """Test extended CAN ID mode (29-bit)."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, mode='extended')
+        self.assertTrue(interface.is_extended_id)
+
+        # Test alternative names
+        interface = LNetCan(bustype='pcan_usb', channel=1, mode='ext')
+        self.assertTrue(interface.is_extended_id)
+
+        interface = LNetCan(bustype='pcan_usb', channel=1, mode='29bit')
+        self.assertTrue(interface.is_extended_id)
+
+    def test_can_baudrate_parameter(self):
+        """Test baudrate parameter."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, baudrate=250000)
+        self.assertEqual(interface.bitrate, 250000)
+
+        # Test different baudrates
+        interface = LNetCan(bustype='pcan_usb', channel=1, baudrate=1000000)
+        self.assertEqual(interface.bitrate, 1000000)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
