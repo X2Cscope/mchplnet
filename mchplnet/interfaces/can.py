@@ -30,7 +30,7 @@ class LNetCan(Interface):
     Configuration:
     - bustype: Interface type ('pcan_usb', 'pcan_lan', 'socketcan', 'vector', 'kvaser')
     - channel: Numeric channel (1, 2, 3...) - automatically converted to vendor format
-    - baudrate: CAN bus speed in bps (default: 500000)
+    - baud_rate: CAN bus speed in bps (default: 500000)
     - mode: 'standard' (11-bit IDs) or 'extended' (29-bit IDs)
     """
 
@@ -79,9 +79,9 @@ class LNetCan(Interface):
                           - 'kvaser': Kvaser CAN interfaces
             channel (int/str): CAN channel number (1, 2, 3...). Defaults to 1.
                               Will be converted to appropriate format for each interface type.
-            baudrate (int): CAN bus baudrate in bits per second. Defaults to 500000 (500 kbps).
-            can_id_tx (int): CAN arbitration ID for transmitting LNet frames. Defaults to 0x110.
-            can_id_rx (int): CAN arbitration ID for receiving LNet frames. Defaults to 0x100.
+            baud_rate (int): CAN bus baud rate in bits per second. Defaults to 500000 (500 kbps).
+            id_tx (int): CAN arbitration ID for transmitting LNet frames. Defaults to 0x110.
+            id_rx (int): CAN arbitration ID for receiving LNet frames. Defaults to 0x100.
             mode (str): CAN ID mode - 'standard' for 11-bit IDs or 'extended' for 29-bit IDs.
                        Defaults to 'standard'.
             timeout (float): Timeout for CAN read operations in seconds. Defaults to 0.1.
@@ -96,11 +96,11 @@ class LNetCan(Interface):
         # Convert channel number to appropriate format for each interface
         self.channel = self._convert_channel(self.bustype, channel_input)
 
-        # Baudrate
-        self.bitrate = kwargs.get("baudrate", 500000)
+        # Baud rate
+        self.bitrate = kwargs.get("baud_rate", 500000)
 
-        self.can_id_tx = kwargs.get("can_id_tx", 0x110)
-        self.can_id_rx = kwargs.get("can_id_rx", 0x100)
+        self.can_id_tx = kwargs.get("id_tx", 0x110)
+        self.can_id_rx = kwargs.get("id_rx", 0x100)
         self.timeout = kwargs.get("timeout", 0.1)
 
         # CAN ID mode: 'standard' (11-bit) or 'extended' (29-bit)
@@ -113,8 +113,8 @@ class LNetCan(Interface):
         # Store any extra configuration for python-can
         # Exclude parameters we've already processed
         self.extra_config = {k: v for k, v in kwargs.items()
-                            if k not in ["channel", "bus", "bustype", "baudrate",
-                                        "can_id_tx", "can_id_rx", "timeout", "mode",
+                            if k not in ["channel", "bus", "bustype", "baud_rate",
+                                        "id_tx", "id_rx", "timeout", "mode",
                                         "elf_file", "interface"]}
 
         self.bus = None

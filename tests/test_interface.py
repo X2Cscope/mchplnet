@@ -241,9 +241,9 @@ class TestCANInterface(unittest.TestCase):
         interface = LNetCan(
             bustype='pcan_usb',
             channel=1,
-            baudrate=500000,
-            can_id_tx=0x100,
-            can_id_rx=0x101
+            baud_rate=500000,
+            id_tx=0x100,
+            id_rx=0x101
         )
         self.assertEqual(interface.bustype, 'pcan_usb')
         self.assertEqual(interface.channel, 'PCAN_USBBUS1')
@@ -281,7 +281,7 @@ class TestCANInterface(unittest.TestCase):
 
     def test_can_read(self):
         """Test reading data from CAN interface."""
-        interface = LNetCan(bustype='pcan_usb', channel=1, can_id_rx=0x101)
+        interface = LNetCan(bustype='pcan_usb', channel=1, id_rx=0x101)
         interface.start()
 
         # Create mock CAN messages
@@ -306,7 +306,7 @@ class TestCANInterface(unittest.TestCase):
 
     def test_can_write_fragmentation(self):
         """Test that large frames are fragmented correctly."""
-        interface = LNetCan(bustype='pcan_usb', channel=1, can_id_tx=0x100)
+        interface = LNetCan(bustype='pcan_usb', channel=1, id_tx=0x100)
         interface.start()
 
         # Create large test data (more than 7 bytes to force fragmentation)
@@ -440,13 +440,13 @@ class TestCANInterface(unittest.TestCase):
         interface = LNetCan(bustype='pcan_usb', channel=1, mode='29bit')
         self.assertTrue(interface.is_extended_id)
 
-    def test_can_baudrate_parameter(self):
-        """Test baudrate parameter."""
-        interface = LNetCan(bustype='pcan_usb', channel=1, baudrate=250000)
+    def test_can_baud_rate_parameter(self):
+        """Test baud_rate parameter."""
+        interface = LNetCan(bustype='pcan_usb', channel=1, baud_rate=250000)
         self.assertEqual(interface.bitrate, 250000)
 
-        # Test different baudrates
-        interface = LNetCan(bustype='pcan_usb', channel=1, baudrate=1000000)
+        # Test different baud rates
+        interface = LNetCan(bustype='pcan_usb', channel=1, baud_rate=1000000)
         self.assertEqual(interface.bitrate, 1000000)
 
 
