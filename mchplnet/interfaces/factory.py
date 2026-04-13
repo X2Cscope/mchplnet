@@ -24,7 +24,7 @@ class InterfaceFactory:
     """Factory class for creating interface instances."""
 
     @staticmethod
-    def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:
+    def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:  # noqa: D417
         r"""Create and return an interface instance based on the specified type.
 
         Args:

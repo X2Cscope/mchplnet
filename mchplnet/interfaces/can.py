@@ -73,11 +73,11 @@ class LNetCan(Interface):
             finally:
                 self.bus = None
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the CAN interface.
+    def __init__(self, *args, **kwargs):  # noqa: D417
+        r"""Initialize the CAN interface.
 
         Args:
-            *args: Variable length argument list passed to parent class.
+            \*args: Variable length argument list passed to parent class.
             bustype (str): CAN interface type:
                           - 'pcan_usb': PCAN USB adapter (default)
                           - 'pcan_lan': PCAN LAN/Ethernet adapter
@@ -92,7 +92,7 @@ class LNetCan(Interface):
             mode (str): CAN ID mode - 'standard' for 11-bit IDs or 'extended' for 29-bit IDs.
                        Defaults to 'standard'.
             timeout (float): Timeout for CAN read operations in seconds. Defaults to 1 second.
-            **kwargs: Additional configuration passed to python-can Bus constructor.
+            \*\*kwargs: Additional configuration passed to python-can Bus constructor.
         """
         super().__init__(*args, **kwargs)
         # Bustype refers to the interface type (USB/LAN, vendor)
