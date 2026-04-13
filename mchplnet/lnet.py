@@ -1,6 +1,5 @@
 """LNet protocol handler for microcontroller communication."""
 
-import logging
 import threading
 
 from mchplnet.interfaces.abstract_interface import Interface

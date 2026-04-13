@@ -7,6 +7,10 @@ import can
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
 
+# LNet frame header constants
+LNET_HEADER_SIZE = 2  # SYN and SIZE bytes
+LNET_FRAME_OVERHEAD = 2  # NODE, SERVICE_ID, and CRC bytes (SIZE doesn't include these)
+
 
 class LNetCan(Interface):
     """LNet CAN interface implementation.
@@ -73,6 +77,7 @@ class LNetCan(Interface):
         """Initialize the CAN interface.
 
         Args:
+            *args: Variable length argument list passed to parent class.
             bustype (str): CAN interface type:
                           - 'pcan_usb': PCAN USB adapter (default)
                           - 'pcan_lan': PCAN LAN/Ethernet adapter
@@ -162,30 +167,21 @@ class LNetCan(Interface):
             return str(channel)
 
         # Map channel numbers to interface-specific identifiers
-        if bustype in ['pcan', 'pcan_usb']:
-            # PCAN USB: PCAN_USBBUS1, PCAN_USBBUS2, etc.
-            return f'PCAN_USBBUS{channel_num}'
+        channel_map = {
+            'pcan': lambda n: f'PCAN_USBBUS{n}',
+            'pcan_usb': lambda n: f'PCAN_USBBUS{n}',
+            'pcan_lan': lambda n: f'PCAN_LANBUS{n}',
+            'socketcan': lambda n: f'can{n - 1}' if n > 0 else 'can0',
+            'vector': lambda n: str(n - 1) if n > 0 else '0',
+            'kvaser': lambda n: n - 1 if n > 0 else 0,
+        }
 
-        elif bustype == 'pcan_lan':
-            # PCAN LAN: PCAN_LANBUS1, PCAN_LANBUS2, etc.
-            return f'PCAN_LANBUS{channel_num}'
+        if bustype in channel_map:
+            return channel_map[bustype](channel_num)
 
-        elif bustype == 'socketcan':
-            # SocketCAN: can0, can1, etc. (0-indexed)
-            return f'can{channel_num - 1}' if channel_num > 0 else 'can0'
-
-        elif bustype == 'vector':
-            # Vector: channel number as string (0-indexed)
-            return str(channel_num - 1) if channel_num > 0 else '0'
-
-        elif bustype == 'kvaser':
-            # Kvaser: channel number as integer (0-indexed)
-            return channel_num - 1 if channel_num > 0 else 0
-
-        else:
-            # For unknown types, just return the channel as-is
-            logging.warning(f"Unknown bustype '{bustype}', using channel as-is: {channel}")
-            return str(channel)
+        # For unknown types, just return the channel as-is
+        logging.warning(f"Unknown bustype '{bustype}', using channel as-is: {channel}")
+        return str(channel)
 
     def write(self, data):
         """Write data to the CAN interface.
@@ -247,7 +243,7 @@ class LNetCan(Interface):
         # Read initial 2 bytes (SYN, SIZE) from CAN messages
         fill_bytes = (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2)
         data = bytearray()
-        size = 2  # Start by reading SYN and SIZE
+        size = LNET_HEADER_SIZE  # Start by reading SYN and SIZE
 
         start = time.time()
         # Read initial SYN and SIZE bytes
@@ -274,8 +270,8 @@ class LNetCan(Interface):
 
         # Now we have at least SYN and SIZE
         # Calculate remaining bytes: NODE, SERVICE_ID, DATA, CRC
-        if len(data) >= 2:
-            size = data[1] + 2  # NODE, SERVICE_ID, CRC (SIZE doesn't include these)
+        if len(data) >= LNET_HEADER_SIZE:
+            size = data[1] + LNET_FRAME_OVERHEAD  # NODE, SERVICE_ID, CRC (SIZE doesn't include these)
             size += 1 if data[1] in fill_bytes else 0  # Add 1 if SIZE is a fill byte
 
             # Continue reading remaining bytes

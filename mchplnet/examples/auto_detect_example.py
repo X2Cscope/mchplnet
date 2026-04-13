@@ -5,6 +5,7 @@ detect which COM port has an LNet device connected.
 """
 
 import logging
+
 from mchplnet.interfaces.uart import LNetSerial
 from mchplnet.lnet import LNet
 
@@ -21,7 +22,7 @@ def test_auto_detection():
 
         # If we get here, auto-detection succeeded
         device_info = lnet.get_device_info()
-        print(f"✓ Auto-detection successful!")
+        print("✓ Auto-detection successful!")
         print(f"  Connected port: {interface.com_port}")
         print(f"  Monitor version: {device_info.monitor_version}")
         print(f"  Processor width: {device_info.uc_width}-bit")
@@ -41,7 +42,7 @@ def test_explicit_auto():
         lnet = LNet(interface)
 
         device_info = lnet.get_device_info()
-        print(f"✓ Auto-detection successful!")
+        print("✓ Auto-detection successful!")
         print(f"  Connected port: {interface.com_port}")
         print(f"  Monitor version: {device_info.monitor_version}")
 
@@ -60,7 +61,7 @@ def test_explicit_port():
         lnet = LNet(interface)
 
         device_info = lnet.get_device_info()
-        print(f"✓ Manual connection successful!")
+        print("✓ Manual connection successful!")
         print(f"  Connected port: {interface.com_port}")
         print(f"  Monitor version: {device_info.monitor_version}")
 

@@ -1,6 +1,7 @@
 """Simple example of auto-detection feature."""
 
 import logging
+
 from mchplnet.interfaces.uart import LNetSerial
 from mchplnet.lnet import LNet
 

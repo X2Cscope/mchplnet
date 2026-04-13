@@ -5,16 +5,16 @@ This module contains tests for the abstract interface and its concrete implement
 
 import time
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import serial
 
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.interfaces.tcp_ip import LNetTcpIp
-from mchplnet.interfaces.uart import LNetSerial
 
 # Import CAN interface
 from mchplnet.interfaces.can import LNetCan
+from mchplnet.interfaces.tcp_ip import LNetTcpIp
+from mchplnet.interfaces.uart import LNetSerial
 
 
 class TestInterface(unittest.TestCase):
