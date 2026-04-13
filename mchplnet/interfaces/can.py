@@ -46,6 +46,9 @@ class LNetCan(Interface):
     def start(self):
         """Start the CAN interface."""
         try:
+            if self.bus is not None:
+                self.stop()
+
             # Map our bustype to python-can's bustype
             # pcan_usb and pcan_lan both use 'pcan' interface, differentiated by channel name
             python_can_bustype = self._get_python_can_bustype(self.bustype)
