@@ -18,6 +18,20 @@ class LNet:
 
     This class facilitates interface handshake, retrieving device information, saving and loading scope parameters,
     and reading/writing data to the microcontroller's RAM.
+
+    When initialized with an interface that supports auto-detection (e.g., LNetSerial with port="AUTO"),
+    the class automatically sets up connection validation using get_device_info() and the interface
+    will find and connect to the first available device that responds correctly to LNet protocol.
+
+    Example:
+        >>> # Auto-detection
+        >>> interface = LNetSerial(port="AUTO")
+        >>> lnet = LNet(interface)
+        >>> print(f"Connected to {interface.com_port}")
+
+        >>> # Manual port
+        >>> interface = LNetSerial(port="COM3")
+        >>> lnet = LNet(interface)
     """
 
     def __init__(self, interface: Interface, handshake: bool = True):
@@ -33,23 +47,10 @@ class LNet:
         self.scope_setup = ScopeSetup()
         self._lock = threading.Lock()
         if handshake:
-            self.interface.start()
-            self._handshake()
-
-    def _handshake(self):
-        """Perform an interface handshake and retrieve device information.
-
-        Raises:
-            RuntimeError: If unable to retrieve device information successfully.
-        """
-        try:
-            if self.get_device_info() is None:
-                raise RuntimeError("Could not read DeviceInfo. Communication channel is available?")
-            self.load_parameters()
-        except Exception as e:
-            logging.error(e)
-            self.interface.stop()
-            raise RuntimeError("Failed to retrieve device information.")
+            # Set the test connection callback for auto-detection
+            self.interface.set_test_connection(self.get_device_info)
+            if self.interface.start():
+                self.load_parameters()
 
     def get_device_info(self) -> DeviceInfo:
         """Retrieve and return the device information.
@@ -171,6 +172,8 @@ class LNet:
                 self.interface.write(frame)
                 return self.interface.read()
             except TimeoutError:
+                if not self.interface.initialised:
+                    raise TimeoutError("Interface not initialized, check connection parameters.")
                 self.interface.stop()
                 self.interface.start()
                 self.interface.write(frame)

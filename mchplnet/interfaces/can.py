@@ -1,5 +1,6 @@
 """CAN interface implementation for LNet protocol."""
 import logging
+import time
 
 import can
 
@@ -52,6 +53,7 @@ class LNetCan(Interface):
                 **self.extra_config
             )
             logging.debug(f"CAN interface started on {self.bustype}:{self.channel} at {self.bitrate} bps")
+            return super().start()
         except Exception as e:
             self.stop()
             logging.error(f"Failed to start CAN interface: {e}")
@@ -84,9 +86,10 @@ class LNetCan(Interface):
             id_rx (int): CAN arbitration ID for receiving LNet frames. Defaults to 0x100.
             mode (str): CAN ID mode - 'standard' for 11-bit IDs or 'extended' for 29-bit IDs.
                        Defaults to 'standard'.
-            timeout (float): Timeout for CAN read operations in seconds. Defaults to 0.1.
+            timeout (float): Timeout for CAN read operations in seconds. Defaults to 1 second.
             **kwargs: Additional configuration passed to python-can Bus constructor.
         """
+        super().__init__(*args, **kwargs)
         # Bustype refers to the interface type (USB/LAN, vendor)
         self.bustype = kwargs.get("bustype", "pcan_usb")
 
@@ -101,7 +104,7 @@ class LNetCan(Interface):
 
         self.can_id_tx = kwargs.get("id_tx", 0x110)
         self.can_id_rx = kwargs.get("id_rx", 0x100)
-        self.timeout = kwargs.get("timeout", 0.1)
+        self.timeout = kwargs.get("timeout", 0.01)
 
         # CAN ID mode: 'standard' (11-bit) or 'extended' (29-bit)
         mode = kwargs.get("mode", "standard")
@@ -232,6 +235,9 @@ class LNetCan(Interface):
 
         Returns:
             bytearray: Complete LNet frame data.
+
+        Raises:
+            TimeoutError: If no data is received within timeout period.
         """
         if not self.bus:
             raise RuntimeError("CAN interface not started")
@@ -243,53 +249,52 @@ class LNetCan(Interface):
         data = bytearray()
         size = 2  # Start by reading SYN and SIZE
 
-        try:
-            # Read initial SYN and SIZE bytes
+        start = time.time()
+        # Read initial SYN and SIZE bytes
+        while size > 0:
+            msg = self.bus.recv(timeout=self.timeout)
+
+            if time.time() - start > 1:
+                raise TimeoutError("No response from endpoint")
+
+            if msg is None:
+                if len(data) == 0:
+                    continue
+                else:
+                    logging.warning("CAN read timeout while receiving frame")
+                    break
+
+            # Filter messages by our RX arbitration ID
+            if msg.arbitration_id != self.can_id_rx:
+                continue
+
+            msg_data = bytearray(msg.data)
+            data.extend(msg_data)
+            size -= len(msg_data)
+
+        # Now we have at least SYN and SIZE
+        # Calculate remaining bytes: NODE, SERVICE_ID, DATA, CRC
+        if len(data) >= 2:
+            size = data[1] + 2  # NODE, SERVICE_ID, CRC (SIZE doesn't include these)
+            size += 1 if data[1] in fill_bytes else 0  # Add 1 if SIZE is a fill byte
+
+            # Continue reading remaining bytes
             while size > 0:
                 msg = self.bus.recv(timeout=self.timeout)
 
                 if msg is None:
-                    if len(data) == 0:
-                        continue  # No data yet, keep waiting
-                    else:
-                        logging.warning("CAN read timeout while receiving frame")
-                        break
+                    logging.warning("CAN read timeout while receiving remaining frame data")
+                    break
 
                 # Filter messages by our RX arbitration ID
                 if msg.arbitration_id != self.can_id_rx:
                     continue
 
                 msg_data = bytearray(msg.data)
-                data.extend(msg_data)
-                size -= len(msg_data)
+                for byte in msg_data:
+                    data.append(byte)
+                    # Don't count fill bytes toward frame size
+                    size -= 0 if byte in fill_bytes else 1
 
-            # Now we have at least SYN and SIZE
-            # Calculate remaining bytes: NODE, SERVICE_ID, DATA, CRC
-            if len(data) >= 2:
-                size = data[1] + 2  # NODE, SERVICE_ID, CRC (SIZE doesn't include these)
-                size += 1 if data[1] in fill_bytes else 0  # Add 1 if SIZE is a fill byte
-
-                # Continue reading remaining bytes
-                while size > 0:
-                    msg = self.bus.recv(timeout=self.timeout)
-
-                    if msg is None:
-                        logging.warning("CAN read timeout while receiving remaining frame data")
-                        break
-
-                    # Filter messages by our RX arbitration ID
-                    if msg.arbitration_id != self.can_id_rx:
-                        continue
-
-                    msg_data = bytearray(msg.data)
-                    for byte in msg_data:
-                        data.append(byte)
-                        # Don't count fill bytes toward frame size
-                        size -= 0 if byte in fill_bytes else 1
-
-            logging.debug(f"CAN read complete: {len(data)} bytes - {data.hex()}")
-            return data
-
-        except Exception as e:
-            logging.error(f"Error reading from CAN interface: {e}")
-            raise
+        logging.debug(f"CAN read complete: {len(data)} bytes - {data.hex()}")
+        return data
