@@ -13,15 +13,17 @@ class LNetTcpIp(Interface):
         """Check if the TCP/IP interface is open."""
         return self.socket.fileno() != -1
 
-    def start(self):
+    def start(self) -> bool:
         """Start the TCP/IP interface."""
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.host, self.port))
+            return super().start()
         except TimeoutError as e:
             self.stop()
             logging.debug(e)
+            raise ValueError("No connection to LNet TCP/IP interface, is the IP address correct?")
 
     def stop(self):
         """Stop the TCP/IP interface."""
@@ -31,9 +33,10 @@ class LNetTcpIp(Interface):
 
     def __init__(self, *args, **kwargs):
         """Initialize the TCP/IP interface."""
+        super().__init__(*args, **kwargs)
         self.port = int(kwargs["tcp_port"]) if "tcp_port" in kwargs else 12666
         self.host = kwargs["host"] if "host" in kwargs else "localhost"
-        self.timeout = kwargs["timeout"] if "timeout" in kwargs else 0.1
+        self.timeout = kwargs["timeout"] if "timeout" in kwargs else 0.05
         self.socket = None
 
     def write(self, data):

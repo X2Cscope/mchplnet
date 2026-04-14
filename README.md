@@ -11,15 +11,26 @@
 ## Getting Started
 1. Navigate to the Examples directory in the mchplnet project to explore the available examples or create a new .py file based on your requirements.
 2. Import the necessary classes:
-```
+```python
 from mchplnet.interfaces.factory import InterfaceFactory
 from mchplnet.interfaces.factory import InterfaceType as IType
 from mchplnet.lnet import LNet
 ```
 3. Create an interface according to your requirements and initialize the LNet with the interface:
+
+**Option A: Auto-detection (Recommended for single device)**
+```python
+# Automatically detect the COM port with an LNet device
+interface = InterfaceFactory.get_interface(IType.SERIAL, port="AUTO", baudrate=115200)
+l_net = LNet(interface)
+print(f"Connected to {interface.com_port}")
 ```
+
+**Option B: Manual port specification**
+```python
+# Specify the COM port explicitly
 interface = InterfaceFactory.get_interface(IType.SERIAL, port="COM8", baudrate=115200)
-l_net = mchplnet.LNet(interface))
+l_net = LNet(interface)
 ```
 4. Use the appropriate functions, such as get_ram, to interact with variables by specifying their address and size:
 

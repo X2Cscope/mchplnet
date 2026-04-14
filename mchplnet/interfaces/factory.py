@@ -24,13 +24,13 @@ class InterfaceFactory:
     """Factory class for creating interface instances."""
 
     @staticmethod
-    def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:
+    def get_interface(interface_type: InterfaceType, *args, **kwargs) -> Interface:  # noqa: D417
         r"""Create and return an interface instance based on the specified type.
 
         Args:
             interface_type (InterfaceType): The type of interface to create.
-            *args: Variable length argument list passed to the interface constructor.
-            **kwargs: Arbitrary keyword arguments passed to the interface constructor.
+            \*args: Variable length argument list passed to the interface constructor.
+            \*\*kwargs: Arbitrary keyword arguments passed to the interface constructor.
 
         Returns:
             Interface: An instance of the requested interface type.
@@ -43,7 +43,7 @@ class InterfaceFactory:
         default_args = {
             "port": LNetSerial,
             "host": LNetTcpIp,
-            "bus": LNetCan,
+            "bustype": LNetCan,
         }
         default = [default_args.get(key) for key in default_args if key in kwargs]
         if len(default) == 0 and interface_type is None:

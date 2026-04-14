@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mchplnet"
-version = "0.4.2"
+version = "0.5.0"
 description = "Python implementation of Microchip LNet protocol"
 authors = [
   "Yash Agarwal",
@@ -25,6 +25,7 @@ repository = "https://github.com/X2Cscope/mchplnet"
 [tool.poetry.dependencies]
 pyserial = "^3.5"
 python-socketio = "^5.16.1"
+python-can = "^4.6.1"
 
 [tool.setuptools.packages.find]
 exclude = ["test", "doc"]  # empty by default
