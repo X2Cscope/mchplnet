@@ -70,8 +70,7 @@ To set up the development environment:
 
 2. Install development dependencies:
    ```bash
-   pip install -r requirements.txt
-   pip install -r quality.txt
+   pip install -e ".[dev,docs,build]"
    ```
 
 3. Install pre-commit hooks:
@@ -80,6 +79,10 @@ To set up the development environment:
    ```
 
 4. The pre-commit hook will now run automatically on each commit to ensure code quality and version consistency.
+
+## Publishing a release
+
+Package releases are handled by GitHub Actions as part of the maintainer release workflow.
 
 
 

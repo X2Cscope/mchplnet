@@ -16,7 +16,7 @@ class LoadScopeData:
     Attributes:
         scope_state (int): Value = zero if the scope is idle, and > zero if the scope is busy.
         num_channels (int): The number of active channels, max eight channels.
-        sample_time_factor (int): Zero means to sample data at every Update function call. Value 1 means to sample every 2nd call and so on.
+        sample_time_factor (int): Internal 0-based scope sampling pre-scaler; 0 stores data at every Update function call, 1 stores every 2nd sample, 2 stores every 3rd sample, and so on.
         data_array_pointer (int): This value is for debug purposes only. It points to the next free location in the Scope Data Array for the next dataset to be stored. This value is an index, not a memory address.
         data_array_address (int): This value contains the memory address of the Scope Data Array.
         trigger_delay (int): The current trigger delay value.

@@ -13,12 +13,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.14"
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r quality.txt
+        pip install -e ".[dev]"
 
     - name: Code Format Check
       run: |
@@ -65,19 +65,21 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.14"]
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r quality.txt
-        pip install -e .
+        pip install -e ".[dev]"
 
     - name: Run tests
       run: |
@@ -85,6 +87,9 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.14"]
 
     steps:
       - name: Checkout repository
@@ -93,13 +98,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r quality.txt
-          pip install -e .
+          pip install -e ".[docs]"
 
       - name: Build documentation
         run: |
