@@ -59,7 +59,8 @@ class ScopeSetup:
 
     Attributes:
         scope_state (int): The state of the scope. (0x02 for Auto without Trigger, 0x01 for Normal with Trigger).
-        sample_time_factor (int): This parameter defines a pre-scaler when the Scope is in the sampling mode.
+        sample_time_factor (int): Internal 0-based sampling pre-scaler used by LNet.
+        A value of 0 stores every sample, 1 stores every 2nd sample, 2 stores every 3rd sample, and so on.
         This parameter can be used to extend the total sampling time at the cost of sampling resolution.
         channels (Dict[str, ScopeChannel]): Dictionary of scope channels keyed by their names.
         scope_trigger (ScopeTrigger): Configuration for the scope trigger.
@@ -75,11 +76,12 @@ class ScopeSetup:
     def set_sample_time_factor(self, sample_time_factor: int = 0):
         """Set the sample time factor for the scope. Default is 0.
 
-        setting this value to 0 means to sample data at every Update function call.
-        Value 1 means to sample every 2nd step, value 2 to sample every 3rd step, etc.
+        This is the internal LNet representation.
+        Setting this value to 0 stores data at every Update function call.
+        Value 1 stores every 2nd sample, value 2 stores every 3rd sample, and so on.
 
         Args:
-            sample_time_factor (int): The sample time factor to be set.
+            sample_time_factor (int): The 0-based sample time pre-scaler to be set.
         """
         self.sample_time_factor = sample_time_factor
 

@@ -10,6 +10,9 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html#project-informatio
 import os
 import sys
 
+# Ensure the package root is importable before reading version metadata.
+sys.path.insert(0, os.path.abspath(".."))
+
 import mchplnet
 
 project = "mchplnet"
@@ -24,8 +27,6 @@ release = mchplnet.__version__
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-sys.path.insert(0, os.path.abspath("../mchplnet"))
-
 extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
@@ -39,6 +40,12 @@ extensions = [
 ]
 
 autoapi_dirs = ["../mchplnet"]
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "show-inheritance",
+    "show-module-summary",
+]
 autoapi_ignore = [
     "scripts/*"
 ]
@@ -75,6 +82,14 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False,
     'display_version': True,
+}
+
+html_sidebars = {
+    "**": [
+        "searchbox.html",
+        "globaltoc.html",
+        "localtoc.html",
+    ]
 }
 
 # Additional HTML settings
