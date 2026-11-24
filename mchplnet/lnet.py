@@ -1,7 +1,10 @@
 """LNet protocol handler for microcontroller communication."""
 
+import logging
 import threading
+from collections import deque
 
+from mchplnet.framing import LNET_SYN_STREAM
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
 from mchplnet.services.frame_getram import FrameGetRam
@@ -10,6 +13,9 @@ from mchplnet.services.frame_putram import FramePutRam
 from mchplnet.services.frame_reboot import FrameReboot
 from mchplnet.services.frame_save_parameter import FrameSaveParameter
 from mchplnet.services.scope import ScopeSetup
+
+# Maximum number of stream frames kept until get_stream_frames() is called; older frames are discarded.
+STREAM_QUEUE_MAX_FRAMES = 10000
 
 
 class LNet:
@@ -45,6 +51,9 @@ class LNet:
         self.device_info = None
         self.scope_setup = ScopeSetup()
         self._lock = threading.Lock()
+        # Stream frames (SYN 0x02) pushed by the device; see get_stream_frames()
+        self._stream_frames = deque(maxlen=STREAM_QUEUE_MAX_FRAMES)
+        self.discarded_stream_frames = 0
         if handshake:
             # Set the test connection callback for auto-detection
             self.interface.set_test_connection(self.get_device_info)
@@ -169,14 +178,52 @@ class LNet:
         with self._lock:
             try:
                 self.interface.write(frame)
-                return self.interface.read()
+                return self._read_response()
             except TimeoutError:
                 if not self.interface.initialised:
                     raise TimeoutError("Interface not initialized, check connection parameters.")
                 self.interface.stop()
                 self.interface.start()
                 self.interface.write(frame)
-                return self.interface.read()
+                return self._read_response()
+
+    def _read_response(self):
+        """Read frames until the response to the pending request arrives.
+
+        Stream frames (SYN 0x02) pushed by the device while waiting are queued for get_stream_frames().
+
+        Returns:
+            The response frame.
+        """
+        while True:
+            frame = self.interface.read()
+            if frame and frame[0] == LNET_SYN_STREAM:
+                self._queue_stream_frame(frame)
+                continue
+            return frame
+
+    def _queue_stream_frame(self, frame):
+        """Store a received stream frame, discarding the oldest one if the queue is full."""
+        if len(self._stream_frames) == self._stream_frames.maxlen:
+            self.discarded_stream_frames += 1
+            logging.debug("LNet: stream queue full, oldest stream frame discarded")
+        self._stream_frames.append(bytearray(frame))
+
+    def get_stream_frames(self) -> list:
+        """Return and remove all stream frames received so far.
+
+        Stream frames (SYN 0x02) are pushed by the device without a request. They are separated from
+        the responses while requests are exchanged.
+
+        Returns:
+            list[bytearray]: Raw stream frames (SYN … checksum, including fill bytes), oldest first.
+        """
+        frames = []
+        while True:
+            try:
+                frames.append(self._stream_frames.popleft())
+            except IndexError:
+                return frames
 
 
     def get_scope_setup(self) -> ScopeSetup:
