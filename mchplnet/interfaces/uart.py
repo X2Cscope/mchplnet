@@ -6,8 +6,8 @@ import warnings
 import serial
 import serial.tools.list_ports
 
+from mchplnet.framing import LNetFrameAssembler
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
 
 
 class LNetSerial(Interface):
@@ -96,6 +96,7 @@ class LNetSerial(Interface):
         self.stop_bit = kwargs["stop_bit"] if "stop_bit" in kwargs else 1
         self.data_bits = kwargs["data_bits"] if "data_bits" in kwargs else 8
         self.serial = None
+        self._assembler = LNetFrameAssembler()
 
     def get_available_ports(self):
         """Enumerate all available COM ports on the system.
@@ -150,6 +151,7 @@ class LNetSerial(Interface):
 
     def _open_port(self):
         """Open the serial port with configured settings."""
+        self._assembler.reset()  # no stale bytes from a previous connection
         # Mapping of settings values to serial module constants
         parity_options = {
             0: serial.PARITY_NONE,
@@ -223,28 +225,26 @@ class LNetSerial(Interface):
         return self.serial.is_open if self.serial else False
 
     def read(self):
-        """Read data from the serial port with LNet protocol framing.
+        """Read the next complete LNet frame from the serial port.
+
+        Bytes are assembled into frames by ``LNetFrameAssembler`` (SYN detection, fill bytes, checksum,
+        resynchronisation). Bytes after the frame are kept for the next call.
 
         Returns:
-            bytearray: The data read from the serial port.
+            bytearray: Raw frame (SYN … checksum, including fill bytes). SYN is 0x55 for standard frames
+            and 0x02 for stream frames.
+
+        Raises:
+            TimeoutError: If no byte is received within the serial timeout.
         """
-        # LNET Frame (SYN, SIZE, NODE, SERVICE_ID, DATA, CRC)
-        # SIZE contains the number of DATA bytes
-        # Read initial 2 bytes (SYN, SIZE)
-        size = 2
-        fill_bytes = (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2)
-        data = bytearray()
-
-        while size:
-            byte = ord(self.serial.read())
-            data.append(byte)
-            size -= 1
-
-        size = data[1] + 2 # NODE, SERVICE_ID, CRC
-        size += 1 if data[1] in fill_bytes else 0
-
-        while size:
-            byte = ord(self.serial.read())
-            data.append(byte)
-            size -= 0 if byte in fill_bytes else 1
-        return data
+        frame = self._assembler.pop_frame()
+        while frame is None:
+            chunk = self.serial.read(1)  # blocks up to the serial timeout
+            if not chunk:
+                raise TimeoutError("No LNet frame received on serial port")
+            waiting = self.serial.in_waiting
+            if isinstance(waiting, int) and waiting > 0:
+                chunk += self.serial.read(waiting)
+            self._assembler.feed(chunk)
+            frame = self._assembler.pop_frame()
+        return frame

@@ -284,15 +284,15 @@ class TestCANInterface(unittest.TestCase):
         interface = LNetCan(bustype='pcan_usb', channel=1, id_rx=0x101)
         interface.start()
 
-        # Create mock CAN messages
+        # Valid LNet frame: SYN, SIZE=4, NODE, 4 data bytes, checksum, split over two CAN messages
+        frame = bytearray([0x55, 0x04, 0x01, 0x0A, 0x0B, 0x0C, 0x0D, 0x88])
         mock_message = MagicMock()
         mock_message.arbitration_id = 0x101
-        mock_message.data = bytearray([8, 0x55, 0x04, 0x01, 0x02, 0x03, 0x04])  # Length + data
+        mock_message.data = frame[:6]
 
-        # Second message with remaining data
         mock_message2 = MagicMock()
         mock_message2.arbitration_id = 0x101
-        mock_message2.data = bytearray([0x05, 0x06])
+        mock_message2.data = frame[6:]
 
         # Mock recv to return our test messages
         self.mock_bus_instance.recv.side_effect = [mock_message, mock_message2, None]
@@ -300,8 +300,9 @@ class TestCANInterface(unittest.TestCase):
         # Read data
         data = interface.read()
 
-        # Verify data was read
+        # Verify the complete frame was read
         self.assertIsInstance(data, bytearray)
+        self.assertEqual(data, frame)
         self.assertTrue(self.mock_bus_instance.recv.called)
 
     def test_can_write_fragmentation(self):

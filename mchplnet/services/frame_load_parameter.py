@@ -8,6 +8,9 @@ from dataclasses import dataclass
 
 from mchplnet.lnetframe import LNetFrame
 
+# First scope version with scope streaming (Stream Control service 0x16)
+SCOPE_VERSION_STREAMING = 3
+
 
 @dataclass
 class LoadScopeData:
@@ -23,7 +26,7 @@ class LoadScopeData:
         trigger_event_position (int): The position of the trigger event.
         data_array_used_length (int): The length of the used portion of the Scope Data Array.
         data_array_size (int): The total size of the Scope Data Array.
-        scope_version (int): The version of the scope.
+        scope_version (int): The raw scope version byte; firmware sends 0x80 + version (e.g. 0x82 = version 2).
     """
 
     scope_state: int
@@ -36,6 +39,16 @@ class LoadScopeData:
     data_array_used_length: int
     data_array_size: int
     scope_version: int
+
+    @property
+    def scope_protocol_version(self) -> int:
+        """Return the scope version number (0 if the firmware does not report it)."""
+        return self.scope_version & 0x7F if self.scope_version & 0x80 else 0
+
+    @property
+    def supports_streaming(self) -> bool:
+        """Return True if the firmware supports scope streaming (scope version 3 or newer)."""
+        return self.scope_protocol_version >= SCOPE_VERSION_STREAMING
 
 
 class FrameLoadParameter(LNetFrame):
@@ -50,7 +63,8 @@ class FrameLoadParameter(LNetFrame):
         self.unique_parameter = 1
 
     def _deserialize(self):
-        data_bytes = self.received[5:-1]
+        # frame_integrity() has already removed fill bytes and the checksum: [SYN, SIZE, NODE, SID, ERR, data...]
+        data_bytes = self.received[5:]
         data_structure = [
             ("scope_state", 1),
             ("num_channels", 1),

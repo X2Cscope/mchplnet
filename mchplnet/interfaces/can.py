@@ -4,12 +4,11 @@ import time
 
 import can
 
+from mchplnet.framing import LNetFrameAssembler
 from mchplnet.interfaces.abstract_interface import Interface
-from mchplnet.lnetframe import LNET_FILL_BYTE_1, LNET_FILL_BYTE_2
 
-# LNet frame header constants
-LNET_HEADER_SIZE = 2  # SYN and SIZE bytes
-LNET_FRAME_OVERHEAD = 2  # NODE, SERVICE_ID, and CRC bytes (SIZE doesn't include these)
+# Maximum time in seconds to receive one complete LNet frame
+LNET_FRAME_TIMEOUT = 1.0
 
 
 class LNetCan(Interface):
@@ -48,6 +47,7 @@ class LNetCan(Interface):
         try:
             if self.bus is not None:
                 self.stop()
+            self._assembler.reset()  # no stale bytes from a previous connection
 
             # Map our bustype to python-can's bustype
             # pcan_usb and pcan_lan both use 'pcan' interface, differentiated by channel name
@@ -129,7 +129,7 @@ class LNetCan(Interface):
                                         "elf_file", "interface"]}
 
         self.bus = None
-        self._rx_buffer = bytearray()
+        self._assembler = LNetFrameAssembler()
 
     def _get_python_can_bustype(self, bustype):
         """Convert our bustype to python-can's bustype.
@@ -241,59 +241,19 @@ class LNetCan(Interface):
         if not self.bus:
             raise RuntimeError("CAN interface not started")
 
-        # LNET Frame (SYN, SIZE, NODE, SERVICE_ID, DATA, CRC)
-        # SIZE (at data[1]) contains the number of DATA bytes
-        # Read initial 2 bytes (SYN, SIZE) from CAN messages
-        fill_bytes = (LNET_FILL_BYTE_1, LNET_FILL_BYTE_2)
-        data = bytearray()
-        size = LNET_HEADER_SIZE  # Start by reading SYN and SIZE
-
+        frame = self._assembler.pop_frame()
         start = time.time()
-        # Read initial SYN and SIZE bytes
-        while size > 0:
+        while frame is None:
+            if time.time() - start > LNET_FRAME_TIMEOUT:
+                raise TimeoutError("No complete LNet frame received from CAN endpoint")
+
             msg = self.bus.recv(timeout=self.timeout)
-
-            if time.time() - start > 1:
-                raise TimeoutError("No response from endpoint")
-
-            if msg is None:
-                if len(data) == 0:
-                    continue
-                else:
-                    logging.warning("CAN read timeout while receiving frame")
-                    break
-
-            # Filter messages by our RX arbitration ID
-            if msg.arbitration_id != self.can_id_rx:
+            # Ignore timeouts of single receive calls and messages of other nodes
+            if msg is None or msg.arbitration_id != self.can_id_rx:
                 continue
 
-            msg_data = bytearray(msg.data)
-            data.extend(msg_data)
-            size -= len(msg_data)
+            self._assembler.feed(bytes(msg.data))
+            frame = self._assembler.pop_frame()
 
-        # Now we have at least SYN and SIZE
-        # Calculate remaining bytes: NODE, SERVICE_ID, DATA, CRC
-        if len(data) >= LNET_HEADER_SIZE:
-            size = data[1] + LNET_FRAME_OVERHEAD  # NODE, SERVICE_ID, CRC (SIZE doesn't include these)
-            size += 1 if data[1] in fill_bytes else 0  # Add 1 if SIZE is a fill byte
-
-            # Continue reading remaining bytes
-            while size > 0:
-                msg = self.bus.recv(timeout=self.timeout)
-
-                if msg is None:
-                    logging.warning("CAN read timeout while receiving remaining frame data")
-                    break
-
-                # Filter messages by our RX arbitration ID
-                if msg.arbitration_id != self.can_id_rx:
-                    continue
-
-                msg_data = bytearray(msg.data)
-                for byte in msg_data:
-                    data.append(byte)
-                    # Don't count fill bytes toward frame size
-                    size -= 0 if byte in fill_bytes else 1
-
-        logging.debug(f"CAN read complete: {len(data)} bytes - {data.hex()}")
-        return data
+        logging.debug(f"CAN read complete: {len(frame)} bytes - {frame.hex()}")
+        return frame
