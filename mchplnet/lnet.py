@@ -77,16 +77,32 @@ class LNet:
             self.device_info = device_info_frame.deserialize()
         return self.device_info
 
-    def reboot_device(self):
-        """Retrieve and return the device information.
+    def reboot_device(self) -> None:
+        """Reboot the device (LNet service 0x19 Reboot).
 
-        Returns:
-            DeviceInfo: The device information retrieved from the microcontroller.
+        If the device executes the reboot it does not answer (LNet v5, 4.13). It answers only with an
+        error, e.g. 0x21 (Service not available: the firmware does not support reboot) or 0x22 (Invalid DSP
+        state: the application refused, e.g. while a motor is running).
+
+        The request is sent once, without the automatic reconnect-and-resend of the other services, so the
+        device is never rebooted twice. After a reboot, a TCP/IP connection is lost; the next request
+        reconnects automatically.
+
+        Raises:
+            LNetDeviceError: If the device answers with an error ID (reboot not supported or refused).
+            LNetFrameError: If the answer is not a valid response to the Reboot request.
         """
-        reboot_device = FrameReboot()
-        print(reboot_device.serialize())
-        reboot_device.received = self._xchg_data(reboot_device.serialize())
-        return reboot_device.received
+        reboot_frame = FrameReboot()
+        with self._lock:
+            self.interface.write(reboot_frame.serialize())
+            try:
+                reboot_frame.received = self._read_response()
+            except (TimeoutError, ConnectionError):
+                # No answer (or the connection dropped): the device is rebooting.
+                logging.info("LNet: reboot requested, the device did not answer (rebooting)")
+                return
+        # An answer means the reboot was not executed; deserialize() raises LNetDeviceError for error IDs.
+        reboot_frame.deserialize()
 
     def save_parameter(self):
         """Save the current scope configuration parameters to the microcontroller.
