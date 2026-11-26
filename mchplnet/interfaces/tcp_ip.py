@@ -13,18 +13,38 @@ class LNetTcpIp(Interface):
         """Check if the TCP/IP interface is open."""
         return self.socket.fileno() != -1
 
+    # Connection attempts in start() if the device resets the connection during the connection test
+    CONNECT_ATTEMPTS = 2
+
     def start(self) -> bool:
-        """Start the TCP/IP interface."""
-        try:
-            self._assembler.reset()  # no stale bytes from a previous connection
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(self.timeout)
-            self.socket.connect((self.host, self.port))
-            return super().start()
-        except TimeoutError as e:
-            self.stop()
-            logging.debug(e)
-            raise ValueError("No connection to LNet TCP/IP interface, is the IP address correct?")
+        """Start the TCP/IP interface: connect and run the connection test (LNet handshake).
+
+        Some lwIP-based devices reset (TCP RST) the first connection after their own reset, while they
+        still resolve the host's MAC address; the next connection works. Therefore the connection is
+        opened once more if the device resets it during the connection test.
+
+        Raises:
+            ValueError: If the device cannot be reached (connect or handshake timeout).
+            ConnectionError: If the device also resets the second connection.
+        """
+        for attempt in range(1, self.CONNECT_ATTEMPTS + 1):
+            try:
+                self._assembler.reset()  # no stale bytes from a previous connection
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.settimeout(self.timeout)
+                self.socket.connect((self.host, self.port))
+                return super().start()
+            except TimeoutError as e:
+                self.stop()
+                logging.debug(e)
+                raise ValueError("No connection to LNet TCP/IP interface, is the IP address correct?") from e
+            except ConnectionError as e:
+                self.stop()
+                if attempt == self.CONNECT_ATTEMPTS:
+                    raise
+                logging.warning("LNet TCP/IP: connection to %s:%s reset by the device (%s), reconnecting",
+                                self.host, self.port, type(e).__name__)
+        return False
 
     def stop(self):
         """Stop the TCP/IP interface."""
