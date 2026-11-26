@@ -174,14 +174,22 @@ class LNet:
 
         Returns:
             The response from the microcontroller.
+
+        On a timeout or a lost connection (e.g. the device answers with a TCP RST, raised as
+        ConnectionResetError), the interface is restarted once and the frame is sent again. Some
+        lwIP-based devices reset the first TCP connection after their own reset while they still
+        resolve the host's MAC address; the second connection works.
         """
         with self._lock:
             try:
                 self.interface.write(frame)
                 return self._read_response()
-            except TimeoutError:
+            except (TimeoutError, ConnectionError) as error:
                 if not self.interface.initialised:
-                    raise TimeoutError("Interface not initialized, check connection parameters.")
+                    if isinstance(error, TimeoutError):
+                        raise TimeoutError("Interface not initialized, check connection parameters.") from error
+                    raise
+                logging.warning("LNet: %s, restarting interface and retrying once", type(error).__name__)
                 self.interface.stop()
                 self.interface.start()
                 self.interface.write(frame)
