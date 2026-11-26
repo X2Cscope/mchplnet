@@ -17,6 +17,11 @@ from mchplnet.services.scope import ScopeSetup
 # Maximum number of stream frames kept until get_stream_frames() is called; older frames are discarded.
 STREAM_QUEUE_MAX_FRAMES = 10000
 
+# LNet v5 maximum frame size (SIZE is one byte); used if the device does not report one
+LNET_DEFAULT_MAX_FRAME_SIZE = 255
+# Data types accepted by Get/Put RAM Block (X2Cscope profile 5.3); 64-bit values use type 4
+RAM_ACCESS_TYPES = (4, 2, 1)
+
 
 class LNet:
     """LNet is a class that handles communication with a microcontroller.
@@ -111,30 +116,84 @@ class LNet:
         self.scope_data = frame_load_param.deserialize()
         return self.scope_data
 
+    @property
+    def max_frame_size(self) -> int:
+        """Return the maximum frame size (SIZE) reported by the device, 255 if not known."""
+        size = getattr(self.device_info, "max_frame_size", 0) if self.device_info else 0
+        if isinstance(size, int) and 0 < size <= LNET_DEFAULT_MAX_FRAME_SIZE:
+            return size
+        return LNET_DEFAULT_MAX_FRAME_SIZE
+
+    @property
+    def max_read_size(self) -> int:
+        """Return the maximum number of bytes one Get RAM Block request can read.
+
+        Response: Service ID, Error ID and the data must fit into one frame (253 for 255-byte frames).
+        """
+        return self.max_frame_size - 2
+
+    @property
+    def max_write_size(self) -> int:
+        """Return the maximum number of bytes one Put RAM Block request can write.
+
+        Request: Service ID, address (uc_width bytes), data type and the data must fit into one frame
+        (249 on 32-bit, 251 on 16-bit devices for 255-byte frames).
+        """
+        return self.max_frame_size - 2 - self.device_info.uc_width
+
+    @staticmethod
+    def _access_type(size: int, data_type: int = 4) -> int:
+        """Return the largest data type accepted by the device (4, 2, 1) that divides size and is <= data_type.
+
+        64-bit values (data_type 8) are accessed as two 32-bit words in one request, because Get/Put RAM
+        Block only accept the data types 1, 2 and 4.
+        """
+        for access_type in RAM_ACCESS_TYPES:
+            if access_type <= data_type and size % access_type == 0:
+                return access_type
+        return 1
+
+    def _get_ram_block(self, address: int, size: int, access_type: int) -> bytearray:
+        """Send one Get RAM Block request (size <= max_read_size, multiple of access_type)."""
+        get_ram_frame = FrameGetRam(address, size, access_type, self.device_info.uc_width)
+        get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
+        return get_ram_frame.deserialize()
+
     def get_ram_array(self, address: int, bytes_to_read: int, data_type: int):
         """Read an array of data from the microcontroller's RAM.
+
+        Reads of any length are split into requests of at most max_read_size bytes; every request reads a
+        multiple of the data type, so values are never split between two requests.
 
         Args:
             address (int): The starting address in RAM to read data from.
             bytes_to_read (int): The number of bytes to read.
-            data_type (int): The data type to read.
+            data_type (int): The data type to read (1, 2, 4; 8 is read as two 32-bit words).
 
         Returns:
-            An array of data read from RAM.
+            bytearray: The data read from RAM.
 
         Raises:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
-        get_ram_frame = FrameGetRam(address, bytes_to_read, data_type, self.device_info.uc_width)
-        get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
-        return get_ram_frame.deserialize()
+        access_type = self._access_type(bytes_to_read, data_type)
+        chunk_size = self.max_read_size - self.max_read_size % access_type
+        if bytes_to_read <= chunk_size:
+            return self._get_ram_block(address, bytes_to_read, access_type)
+        data = bytearray()
+        offset = 0
+        while offset < bytes_to_read:
+            size = min(chunk_size, bytes_to_read - offset)
+            data.extend(self._get_ram_block(address + offset, size, access_type))
+            offset += size
+        return data
 
     def get_ram(self, address: int, data_type: int) -> bytearray:
         """Read data from the microcontroller's RAM.
 
         Args:
             address (int): The address to read data from in the microcontroller's RAM.
-            data_type (int): The data type (number of bytes) to read.
+            data_type (int): The data type (number of bytes) to read: 1, 2, 4 or 8.
 
         Returns:
             bytearray: The data read from the RAM.
@@ -142,12 +201,13 @@ class LNet:
         Raises:
             RuntimeError: If device information is not retrieved before reading RAM.
         """
-        get_ram_frame = FrameGetRam(address, data_type, data_type, self.device_info.uc_width)
-        get_ram_frame.received = self._xchg_data(get_ram_frame.serialize())
-        return get_ram_frame.deserialize()
+        return self._get_ram_block(address, data_type, self._access_type(data_type, data_type))
 
     def put_ram(self, address: int, size: int, value: bytearray):
         """Write data to the microcontroller's RAM.
+
+        Writes of any length are split into requests of at most max_write_size bytes. Values of 1, 2 and 4
+        bytes are written with their own data type, 8-byte values as two 32-bit words in one request.
 
         Args:
             address (int): The address in the microcontroller's RAM to write data to.
@@ -155,14 +215,26 @@ class LNet:
             value (bytearray): The data to be written to RAM.
 
         Returns:
-            The response from the microcontroller.
+            The response from the microcontroller (of the last request).
 
         Raises:
             RuntimeError: If device information is not retrieved before writing to RAM.
+            ValueError: If value does not contain size bytes.
         """
-        put_ram_frame = FramePutRam(address, size, self.device_info.uc_width, value)
-        put_ram_frame.received = self._xchg_data(put_ram_frame.serialize())
-        return put_ram_frame.deserialize()
+        value = bytearray(value)
+        if len(value) != size:
+            raise ValueError(f"put_ram: value has {len(value)} bytes, size is {size}")
+        access_type = self._access_type(size)
+        chunk_size = self.max_write_size - self.max_write_size % access_type
+        result = None
+        offset = 0
+        while offset < size or offset == 0:
+            chunk = value[offset:offset + chunk_size]
+            put_ram_frame = FramePutRam(address + offset, access_type, self.device_info.uc_width, chunk)
+            put_ram_frame.received = self._xchg_data(put_ram_frame.serialize())
+            result = put_ram_frame.deserialize()
+            offset += max(len(chunk), 1)
+        return result
 
     def _xchg_data(self, frame):
         """Send a frame to the microcontroller and read the response.
