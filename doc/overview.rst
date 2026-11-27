@@ -27,7 +27,7 @@ The mchplnet package is organized into several key components:
 
 **Services**
    Protocol services including device info, RAM access (GetRam/PutRam), scope parameter
-   management, and device reboot functionality.
+   management, and device reset functionality.
 
 Quick Example
 -------------

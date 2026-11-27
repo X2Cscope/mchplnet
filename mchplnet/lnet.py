@@ -78,39 +78,39 @@ class LNet:
             self.device_info = device_info_frame.deserialize()
         return self.device_info
 
-    def reboot_device(self) -> ServiceResult:
-        """Reboot the device (LNet service 0x19 Reboot).
+    def reset_device(self) -> ServiceResult:
+        """Reset the device (LNet service 0x19 Reboot).
 
-        If the device executes the reboot it does not answer (LNet v5, 4.13). It answers only with an
-        error, e.g. 0x21 (Service not available: the firmware does not support reboot) or 0x22 (Invalid DSP
-        state: the application refused, e.g. while a motor is running).
+        If the device executes the reset it does not answer (LNet v5, 4.13). It answers only with an
+        error, e.g. 0x21 (Service not available: the firmware does not support the reset) or 0x22 (Invalid DSP
+        state: the firmware cannot reset the device now).
 
         The request is sent once, without the automatic reconnect-and-resend of the other services, so the
-        device is never rebooted twice. After a reboot, a TCP/IP connection is lost; the next request
+        device is never reset twice. After a reset, a TCP/IP connection is lost; the next request
         reconnects automatically.
 
         Returns:
-            ServiceResult: (code, text). Code NO_ERROR (0): the device is rebooting. Otherwise the reboot was
+            ServiceResult: (code, text). Code NO_ERROR (0): the device is resetting. Otherwise the reset was
             not executed; code is the error ID the device answered with and text its description
             (see mchplnet.errors.error_description()).
 
         Raises:
             LNetFrameError: If the answer is not a valid response to the Reboot request.
         """
-        reboot_frame = FrameReboot()
+        reset_frame = FrameReboot()
         with self._lock:
-            self.interface.write(reboot_frame.serialize())
+            self.interface.write(reset_frame.serialize())
             try:
-                reboot_frame.received = self._read_response()
+                reset_frame.received = self._read_response()
             except (TimeoutError, ConnectionError):
-                # No answer (or the connection dropped): the device is rebooting.
-                logging.info("LNet: reboot requested, the device did not answer (rebooting)")
+                # No answer (or the connection dropped): the device is resetting.
+                logging.info("LNet: reset requested, the device did not answer (resetting)")
                 return ServiceResult.from_code(NO_ERROR)
-        # An answer means the reboot was not executed, unless the device answers "no error" before it resets.
+        # An answer means the reset was not executed, unless the device answers "no error" before it resets.
         try:
-            reboot_frame.deserialize()
+            reset_frame.deserialize()
         except LNetDeviceError as e:
-            logging.info(f"LNet: reboot not executed: {e}")
+            logging.info(f"LNet: reset not executed: {e}")
             return ServiceResult.from_code(e.error_id)
         return ServiceResult.from_code(NO_ERROR)
 

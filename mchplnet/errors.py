@@ -67,7 +67,7 @@ def service_name(service_id) -> str:
 
 
 class ServiceResult(NamedTuple):
-    """Result of a service that reports its outcome as a code instead of raising, e.g. LNet.reboot_device().
+    """Result of a service that reports its outcome as a code instead of raising, e.g. LNet.reset_device().
 
     Attributes:
         code (int): NO_ERROR (0) on success, otherwise the error ID sent by the device.
