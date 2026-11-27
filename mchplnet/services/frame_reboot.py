@@ -6,8 +6,8 @@ from mchplnet.lnetframe import LNetFrame
 class FrameReboot(LNetFrame):
     """Reboot request (LNet service 0x19). Inherits from LNetFrame.
 
-    Request and response have no service data. A device that executes the reboot does not answer;
-    a response therefore only carries an error ID (see LNet.reboot_device()).
+    Used to reset the device. Request and response have no service data. A device that executes the
+    reset does not answer; a response therefore only carries an error ID (see LNet.reset_device()).
     """
 
     def __init__(self):

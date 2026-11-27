@@ -4,6 +4,10 @@ Error IDs are those of LNet v5 and v6 (LCM) plus the X2Cscope extensions, see
 X2Cscope_library_make doc/lnet/x2cscope_lnet_profile.md, section 8.
 """
 
+from typing import NamedTuple
+
+NO_ERROR = 0x00
+
 ERROR_DESCRIPTIONS = {
     0x00: "No error",
     0x13: "Checksum error",
@@ -60,6 +64,28 @@ def service_name(service_id) -> str:
     if service_id is None:
         return "unknown service"
     return f"0x{service_id:02X} ({SERVICE_NAMES.get(service_id, 'unknown service')})"
+
+
+class ServiceResult(NamedTuple):
+    """Result of a service that reports its outcome as a code instead of raising, e.g. LNet.reset_device().
+
+    Attributes:
+        code (int): NO_ERROR (0) on success, otherwise the error ID sent by the device.
+        text (str): Description of the code, as returned by error_description().
+    """
+
+    code: int
+    text: str
+
+    @classmethod
+    def from_code(cls, code: int) -> "ServiceResult":
+        """Create the result for a code, with its description."""
+        return cls(code, error_description(code))
+
+    @property
+    def success(self) -> bool:
+        """Return True if the code is NO_ERROR."""
+        return self.code == NO_ERROR
 
 
 class LNetError(Exception):
