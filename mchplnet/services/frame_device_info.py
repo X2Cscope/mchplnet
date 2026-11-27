@@ -24,7 +24,8 @@ class DeviceInfo:
     """Data class containing device information from the microcontroller."""
     monitor_version: int = 0
     app_version: int = 0
-    max_target_size = 0
+    max_target_size = 0  # deprecated alias of max_frame_size
+    max_frame_size: int = 0  # maximum LNet frame size (SIZE) the target supports, e.g. 255
     processor_id: int = 0
     monitor_date: int = 0
     monitor_time: int = 0
@@ -108,6 +109,8 @@ class FrameDeviceInfo(LNetFrame):
     def _deserialize(self):
         DeviceInfo.app_version = self._app_ver()
         DeviceInfo.monitor_version = self._monitor_ver()
+        DeviceInfo.max_frame_size = self._max_frame_size()
+        DeviceInfo.max_target_size = DeviceInfo.max_frame_size
         DeviceInfo.uc_width = self._get_processor_id()
         DeviceInfo.monitor_date = self._monitor_date()
         DeviceInfo.monitor_time = self._monitor_time()
@@ -135,6 +138,14 @@ class FrameDeviceInfo(LNetFrame):
             int: The monitor version data.
         """
         return int.from_bytes(self.received[5:7], byteorder="little")
+
+    def _max_frame_size(self):
+        """Get the maximum target frame size (service data byte 4, LNet v5).
+
+        Returns:
+            int: Maximum number of data bytes (SIZE) of a frame the target can receive and send.
+        """
+        return self.received[9]
 
     def _monitor_date(self):
         """Extract and convert monitor date and time from the received data.

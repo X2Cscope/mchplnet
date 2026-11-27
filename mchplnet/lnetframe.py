@@ -3,6 +3,8 @@
 import logging
 from abc import ABC, abstractmethod
 
+from mchplnet.errors import LNetDeviceError, LNetFrameError, error_description, service_name
+
 # LNet protocol constants
 LNET_SYN_BYTE = 0x55  # Frame synchronization byte
 LNET_FILL_BYTE_1 = 0x55  # First fill byte marker
@@ -12,6 +14,8 @@ LNET_SYN_BYTE_DECIMAL = 85  # SYN byte in decimal (0x55)
 # LNet frame counter positions
 LNET_FRAME_SIZE_IDX = 3  # Position in frame counter when SIZE field is read
 LNET_MIN_FRAME_LENGTH = 2  # Minimum frame length (data + CRC)
+LNET_MIN_RESPONSE_LENGTH = 6  # SYN, SIZE, NODE, Service ID, Error ID, CRC
+LNET_RESPONSE_HEADER = 3  # SYN, SIZE, NODE (bytes not counted by SIZE)
 
 
 class LNetFrame(ABC):
@@ -172,17 +176,53 @@ class LNetFrame(ABC):
         Returns:
             bool: True if the Service ID and error status are valid, False otherwise.
         """
-        logging.debug(self.get_error_id(self.received[4]))
         return self.received[3] == self.service_id and self.received[4] == 0
 
+    def _check_frame_length(self):
+        """Check that the received frame (fill bytes and checksum removed) is complete and consistent.
+
+        Raises:
+            LNetFrameError: If the frame is shorter than a response header or SIZE does not match.
+        """
+        if len(self.received) < LNET_MIN_RESPONSE_LENGTH - 1:
+            raise LNetFrameError(f"Response to service {service_name(self.service_id)} too short: "
+                                 f"{bytes(self.received).hex()}")
+        if self.received[1] != len(self.received) - LNET_RESPONSE_HEADER:
+            raise LNetFrameError(f"Response to service {service_name(self.service_id)}: SIZE {self.received[1]} "
+                                 f"does not match {len(self.received) - LNET_RESPONSE_HEADER} data bytes")
+
+    def _raise_protocol_error(self):
+        """Raise the exception matching the Service ID and Error ID of the received frame.
+
+        Raises:
+            LNetFrameError: If the response belongs to another service (e.g. a late response).
+            LNetDeviceError: If the device answered with an error ID.
+        """
+        if self.received[3] != self.service_id:
+            raise LNetFrameError(f"Expected response to service {service_name(self.service_id)}, "
+                                 f"received service {service_name(self.received[3])}")
+        raise LNetDeviceError(self.service_id, self.received[4])
+
     def deserialize(self):
-        """Save the parameters and check for errors in the response frame.
+        """Check the response frame and return the service data.
 
         Returns:
-            None or object: Deserialized frame or None if there are errors.
+            object: Deserialized service data, depending on the service.
+
+        Raises:
+            LNetFrameError: On checksum error, incomplete frame, SIZE mismatch or unexpected Service ID.
+            LNetDeviceError: If the device answered with an error ID.
         """
-        if self.frame_integrity() and self._check_frame_protocol():
-            logging.error("Error on frame integrity or frame not correct!")
+        if self.received is None or len(self.received) < LNET_MIN_RESPONSE_LENGTH:
+            raise LNetFrameError(f"Response to service {service_name(self.service_id)} too short: "
+                                 f"{bytes(self.received or b'').hex()}")
+        raw = bytes(self.received)
+        if self.frame_integrity():
+            raise LNetFrameError(f"Checksum error in response to service {service_name(self.service_id)}: "
+                                 f"{raw.hex()}")
+        self._check_frame_length()
+        if not self._check_frame_protocol():
+            self._raise_protocol_error()
         return self._deserialize()
 
     @staticmethod
@@ -193,30 +233,9 @@ class LNetFrame(ABC):
             error_id (int): Error ID.
 
         Returns:
-            str: Error description.
+            str: Error description; "Unknown error ID 0x.." for IDs not defined by LNet.
         """
-        _error_id = {
-            0: "No Error",
-            19: "Checksum Error",
-            20: "Format Error",
-            21: "Size too large",
-            33: "Service not available",
-            34: "Invalid DSP state",
-            48: "Flash write error",
-            49: "Flash write protect error",
-            64: "Invalid Parameter ID",
-            65: "Invalid Block ID",
-            66: "Parameter Limit error",
-            67: "Parameter table not initialized",
-            80: "Power-on Error",
-        }
-        try:
-            __error_id = _error_id[error_id]
-        except IndexError:
-            logging.error("Unknown Error")
-            logging.error("Valid index numbers are: " + str(list(_error_id.keys())))
-            return
-        return _error_id[error_id]
+        return error_description(error_id)
 
 
 if __name__ == "__main__":
