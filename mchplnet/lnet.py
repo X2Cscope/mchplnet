@@ -4,6 +4,7 @@ import logging
 import threading
 from collections import deque
 
+from mchplnet.errors import NO_ERROR, LNetDeviceError, ServiceResult
 from mchplnet.framing import LNET_SYN_STREAM
 from mchplnet.interfaces.abstract_interface import Interface
 from mchplnet.services.frame_device_info import DeviceInfo, FrameDeviceInfo
@@ -77,7 +78,7 @@ class LNet:
             self.device_info = device_info_frame.deserialize()
         return self.device_info
 
-    def reboot_device(self) -> None:
+    def reboot_device(self) -> ServiceResult:
         """Reboot the device (LNet service 0x19 Reboot).
 
         If the device executes the reboot it does not answer (LNet v5, 4.13). It answers only with an
@@ -88,8 +89,12 @@ class LNet:
         device is never rebooted twice. After a reboot, a TCP/IP connection is lost; the next request
         reconnects automatically.
 
+        Returns:
+            ServiceResult: (code, text). Code NO_ERROR (0): the device is rebooting. Otherwise the reboot was
+            not executed; code is the error ID the device answered with and text its description
+            (see mchplnet.errors.error_description()).
+
         Raises:
-            LNetDeviceError: If the device answers with an error ID (reboot not supported or refused).
             LNetFrameError: If the answer is not a valid response to the Reboot request.
         """
         reboot_frame = FrameReboot()
@@ -100,9 +105,14 @@ class LNet:
             except (TimeoutError, ConnectionError):
                 # No answer (or the connection dropped): the device is rebooting.
                 logging.info("LNet: reboot requested, the device did not answer (rebooting)")
-                return
-        # An answer means the reboot was not executed; deserialize() raises LNetDeviceError for error IDs.
-        reboot_frame.deserialize()
+                return ServiceResult.from_code(NO_ERROR)
+        # An answer means the reboot was not executed, unless the device answers "no error" before it resets.
+        try:
+            reboot_frame.deserialize()
+        except LNetDeviceError as e:
+            logging.info(f"LNet: reboot not executed: {e}")
+            return ServiceResult.from_code(e.error_id)
+        return ServiceResult.from_code(NO_ERROR)
 
     def save_parameter(self):
         """Save the current scope configuration parameters to the microcontroller.
