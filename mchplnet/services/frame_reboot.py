@@ -1,24 +1,27 @@
-"""Frame implementation for device reboot functionality."""
+"""Frame implementation of the LNet Reboot service (0x19)."""
 
 from mchplnet.lnetframe import LNetFrame
 
 
 class FrameReboot(LNetFrame):
-    """Custom frame for device information retrieval and interpretation. Inherits from LNetFrame."""
+    """Reboot request (LNet service 0x19). Inherits from LNetFrame.
+
+    Request and response have no service data. A device that executes the reboot does not answer;
+    a response therefore only carries an error ID (see LNet.reboot_device()).
+    """
 
     def __init__(self):
-        """Initialize the FrameDeviceInfo class."""
+        """Initialize the FrameReboot class."""
         super().__init__()
-        self.service_id = 25
+        self.service_id = 0x19
 
     def _get_data(self):
         self.data.append(self.service_id)
 
-
     def _deserialize(self):
         """Deserialization of bytes received from device.
 
-        Nothing to do here once there is no service data on save parameter and
-        errors and service id have already being checked by the superclass
+        Nothing to do: there is no service data, and the error and service IDs have already been checked
+        by the superclass.
         """
         pass
